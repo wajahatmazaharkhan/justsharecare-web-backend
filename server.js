@@ -16,6 +16,8 @@ import { connectToDatabase } from "./src/db/db.js";
 // ===============================================================
 import { FormRouter } from "./src/router/Form.router.js";
 import { userRouter } from "./src/router/User.router.js";
+import { AvailabilityRouter } from "./src/router/Availability.router.js"
+
 
 // ===============================================================
 // 🚀 Create Express App Instance
@@ -68,6 +70,8 @@ app.get("/", (req, res) => {
 // ===============================================================
 app.use("/api/form", FormRouter); 
 app.use("/api/user",userRouter);
+app.use("/api/availability", AvailabilityRouter)
+
 
 // Example: http://localhost:4000/api/form/submit
 
