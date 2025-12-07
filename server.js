@@ -15,6 +15,7 @@ import { connectToDatabase } from "./src/db/db.js";
 // 🚦 Routes Import
 // ===============================================================
 import { FormRouter } from "./src/router/Form.router.js";
+import { userRouter } from "./src/router/User.router.js";
 
 // ===============================================================
 // 🚀 Create Express App Instance
@@ -66,6 +67,8 @@ app.get("/", (req, res) => {
 // 📌 Register Application Routes
 // ===============================================================
 app.use("/api/form", FormRouter); 
+app.use("/api/user",userRouter);
+
 // Example: http://localhost:4000/api/form/submit
 
 // ===============================================================

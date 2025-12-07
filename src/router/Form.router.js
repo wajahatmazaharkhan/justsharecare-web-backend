@@ -27,6 +27,8 @@ export const FormRouter = Router();
 // Description: Submit new form
 // -------------------------
 FormRouter.route("/submit").post(FormController);
+//FormRouter.post("/submit",FormController);
+//--------------------------
 
 // ===============================================
 // EXAMPLES (Add when project grows)

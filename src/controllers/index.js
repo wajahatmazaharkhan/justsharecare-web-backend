@@ -17,14 +17,11 @@
 // ===============================================
 
 import { FormController } from "./Form.controllers.js";
+import { SignUp ,Login } from "./User.controllers.js";
 
 // Export all controllers together
 export {
     FormController,
-    
-    // EXAMPLES (when you add more):
-    // UserController,
-    // AuthController,
-    // ProductController,
-    // OrderController,
+    SignUp,
+    Login
 };
