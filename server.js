@@ -19,6 +19,7 @@ import { FormRouter } from "./src/router/Form.router.js";
 import { userRouter } from "./src/router/User.router.js";
 import { RazorpayRouter } from "./src/router/Razorypay.router.js";
 import { AvailabilityRouter } from "./src/router/Availability.router.js"
+import { counsellorRouter } from "./src/router/Counsellor.router.js";
 
 // ===============================================================
 // 🚀 Create Express App Instance
@@ -84,7 +85,8 @@ export const instance = new Razorpay({
 // app.use("/razorpay",RazorpayRouter);
 app.use("/api/form", FormRouter); 
 app.use("/api/user",userRouter);
-app.use("/api/availability", AvailabilityRouter)
+app.use("/api/availability", AvailabilityRouter);
+app.use("/api/counsellor" ,counsellorRouter);
 
 
 // Example: http://localhost:4000/api/form/submit
