@@ -18,6 +18,7 @@
 
 import { FormController } from "./Form.controllers.js";
 import { SignUp ,Login , sendEmailOtp , VerifyOtp ,getHistory } from "./User.controllers.js";
+import { CounsellorSignup , CounsellorLogin } from "./Counsellor.controllers.js";
 
 // Export all controllers together
 export {
@@ -26,5 +27,7 @@ export {
     Login,
     sendEmailOtp,
     VerifyOtp,
-    getHistory
+    getHistory,
+    CounsellorLogin,
+    CounsellorSignup
 };

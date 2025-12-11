@@ -67,32 +67,37 @@ const counsellorSchema = new mongoose.Schema({
     default: false
   },
 
-  profile_picture_url: {
-    type: String
+
+  documents: {
+    government_id: { type: String, required: true },
+    profile_picture: { type: String, required: true },
+    qualification_certificates: { type: String, required: true },
+    licence: { type: String, required: true },
+    experince_letter: { type: String },
+    additional_documents: { type: String },
   },
-
-  documents: [{
-    type: String
-  }],
-
   session_type: {
-    type: String,
-    enum: ["chat", "audio", "video"],
+    type: [String],
+    enum: ["video", "audio", "chat"],
     required: true
   },
 
+  Admin_approved: {
+    type: Boolean,
+    default: false
+  },
   status: {
     type: String,
     enum: ["active", "inactive", "banned"],
     default: "active"
   },
-   history: [
-      {
-        customerId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        visitDate: { type: Date, default: Date.now },
-        notes: { type: String }, // optional notes about the session
-      }
-    ]
+  history: [
+    {
+      customerId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      visitDate: { type: Date, default: Date.now },
+      notes: { type: String }, // optional notes about the session
+    }
+  ]
 }, { timestamps: true });
 
-export const Counsellor =  mongoose.model("Counsellor", counsellorSchema);
+export const Counsellor = mongoose.model("Counsellor", counsellorSchema);
