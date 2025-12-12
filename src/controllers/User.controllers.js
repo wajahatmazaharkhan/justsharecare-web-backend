@@ -4,8 +4,7 @@ import bcrypt from "bcryptjs";
 //otp service imports
 import { sendOtpEmail } from "../services/OtpEmailVerification.js";
 // validator imports
-import { SignupValidation, LoginValidation, AdminLoginValidation } from "../validator/User.validation.js";
-
+import { SignupValidation, LoginValidation, AdminLoginValidation ,UserUpdateValidation} from "../validator/User.validation.js";
 // signup user controller function //
 export const SignUp = async (req, res) => {
     try {
@@ -339,3 +338,51 @@ export const getHistory = async (req, res) => {
   }
 };
 
+
+/**
+ * Controller to update logged-in user's profile details.
+ */
+export const updateUserProfile = async (req, res) => {
+    try {
+        const data = UserUpdateValidation.parse(req.body);
+
+        //  Get the User ID from the middleware (req.user)
+        const userId = req.user.userId;
+        
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { $set: data },
+            { new: true, runValidators: true }
+        ).select("-Password -otp -otpExpiry");
+
+        if (!updatedUser) {
+            return res.status(404).json({
+                success: false,
+                msg: "User not found."
+            });
+        }
+
+        // 4. Return success response
+        return res.status(200).json({
+            success: true,
+            msg: "Profile updated successfully.",
+            user: updatedUser
+        });
+
+    } catch (error) {
+        // Handle Validation Errors
+        if (error.name === "ZodError") {
+            return res.status(400).json({
+                success: false,
+                msg: "Validation Error",
+                errors: error.errors
+            });
+        }
+        
+        console.error("Update Profile Error:", error);
+        return res.status(500).json({
+            success: false,
+            msg: "Internal Server Error"
+        });
+    }
+};
