@@ -45,3 +45,33 @@ export const AdminLoginValidation = z.object({
   email: z.email(),
   Password: z.string(),
 })
+
+
+// src/validator/User.validation.js 
+
+export const UserUpdateValidation = z.object({
+  fullname: z
+    .string()
+    .min(3, "Full name must be at least 3 characters")
+    .max(50, "Full name is too long")
+    .trim()
+    .optional(),
+
+  phone_number: z
+    .string()
+    .regex(/^[0-9]{10}$/, "Phone number must be 10 digits")
+    .optional(),
+
+  dob: z
+    .string()
+    .refine((val) => !isNaN(Date.parse(val)), {
+      message: "Invalid date of birth",
+    })
+    .optional(),
+
+  gender: z.enum(["male", "female", "other"]).optional(),
+
+  timezone: z.string().optional(),
+
+  preferred_language: z.string().optional(),
+});
