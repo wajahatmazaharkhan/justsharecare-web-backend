@@ -18,8 +18,9 @@ import { connectToDatabase } from "./src/db/db.js";
 import { FormRouter } from "./src/router/Form.router.js";
 import { userRouter } from "./src/router/User.router.js";
 import { RazorpayRouter } from "./src/router/Razorypay.router.js";
-import { AvailabilityRouter } from "./src/router/Availability.router.js"
+import { AvailabilityRouter } from "./src/router/Availability.router.js";
 import { counsellorRouter } from "./src/router/Counsellor.router.js";
+import { Novu } from "@novu/api";
 
 // ===============================================================
 // 🚀 Create Express App Instance
@@ -67,7 +68,6 @@ app.get("/", (req, res) => {
   res.status(200).json({ msg: "Web server is running healthy!" });
 });
 
-
 // ===============================================================
 //  Razorpay Instance
 // ===============================================================
@@ -81,15 +81,19 @@ export const instance = new Razorpay({
 // 📌 Register Application Routes
 // ===============================================================
 
-
 // app.use("/razorpay",RazorpayRouter);
-app.use("/api/form", FormRouter); 
-app.use("/api/user",userRouter);
+app.use("/api/form", FormRouter);
+app.use("/api/user", userRouter);
 app.use("/api/availability", AvailabilityRouter);
-app.use("/api/counsellor" ,counsellorRouter);
-
+app.use("/api/counsellor", counsellorRouter);
 
 // Example: http://localhost:4000/api/form/submit
+
+// Novu Notification Service Instance
+
+export const novu = new Novu({
+  secretKey: process.env.NOVU_SECRET_KEY,
+});
 
 // ===============================================================
 // 🟢 Connect to DB ➜ Start Server
