@@ -9,12 +9,7 @@ const NotificationSchema = new mongoose.Schema(
        required: true,
        index: true
      },
-    id: {
-      type: String,
-      required: true,
-      unique: true,
-      index: true,
-    },
+   
     title: {
       type: String,
       required: true,
