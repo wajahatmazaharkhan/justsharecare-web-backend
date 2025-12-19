@@ -21,6 +21,7 @@ import { RazorpayRouter } from "./src/router/Razorypay.router.js";
 import { AvailabilityRouter } from "./src/router/Availability.router.js";
 import { counsellorRouter } from "./src/router/Counsellor.router.js";
 import { AppointmentRouter } from "./src/router/Appointments.router.js";
+import { Novu } from "@novu/api";
 
 // ===============================================================
 // 🚀 Create Express App Instance
@@ -89,6 +90,12 @@ app.use("/api/counsellor", counsellorRouter);
 app.use("/api/appointments", AppointmentRouter);
 
 // Example: http://localhost:4000/api/form/submit
+
+// Novu Notification Service Instance
+
+export const novu = new Novu({
+  secretKey: process.env.NOVU_SECRET_KEY,
+});
 
 // ===============================================================
 // 🟢 Connect to DB ➜ Start Server

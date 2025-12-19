@@ -51,6 +51,10 @@ const userSchema = new mongoose.Schema({
   otpExpiry: {
     type: Date,
   },
+  passwordOtpVerify :{
+    type : Boolean,
+    default : false
+  }
 }, { timestamps: true });
 
 /******************** Password HASHING ********************/
