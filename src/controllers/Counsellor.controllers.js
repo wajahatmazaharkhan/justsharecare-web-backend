@@ -2,6 +2,7 @@ import { User } from "../models/User.models.js"
 import { Counsellor } from "../models/Counsellor.models.js"
 import { ImagekitFileUploader } from "../services/imagekit.services.js"
 import { CounsellorLoginValiation, CounsellorValidation } from "../validator/Counsellor.validation.js"
+import bcrypt from "bcryptjs"
 
 export const CounsellorSignup = async (req, res) => {
     try {
@@ -50,10 +51,10 @@ export const CounsellorSignup = async (req, res) => {
         --------------------------------------------------------- */
         const profile = await Counsellor.create({
             user_id: user._id,
-            fullname : data.fullname,
-            email : data.email,
-            dob : data.dob,
-            gender : data.gender,
+            fullname: data.fullname,
+            email: data.email,
+            dob: data.dob,
+            gender: data.gender,
             contact_number: data.contact_number,
             counselling_type: data.counselling_type,
             specialties: data.specialties,
@@ -94,26 +95,26 @@ export const CounsellorLogin = async (req, res) => {
         const data = CounsellorLoginValiation.parse(req.body);
 
         const userExisted = await User.findOne({ email: data.email });
-        const counsellor = await Counsellor.findOne({ email : data.email})
+        const counsellor = await Counsellor.findOne({ email: data.email })
 
-        if(!userExisted){
-            return res.status(404).json({ msg : "user not found"})
+        if (!userExisted) {
+            return res.status(404).json({ msg: "user not found" })
         }
 
         if (userExisted.role != "counsellor") {
-            return res.status(402).json({ msg : "only counsellor can login"})
+            return res.status(402).json({ msg: "only counsellor can login" })
         }
 
         if (!counsellor.Admin_approved) {
-             return res.status(403).json({ msg: "Your profile is not approved by admin yet after approved you can login" });
-           }
+            return res.status(403).json({ msg: "Your profile is not approved by admin yet after approved you can login" });
+        }
 
         const user = await userExisted.comparePassword(data.Password);
 
-        if(!user){
-            return res.status(400).json({msg : "email or password maybe not correct"})
+        if (!user) {
+            return res.status(400).json({ msg: "email or password maybe not correct" })
         }
-        const token =  userExisted.generateAuthToken();
+        const token = userExisted.generateAuthToken();
 
         // cookie option
         const option = {
@@ -145,37 +146,81 @@ export const CounsellorLogin = async (req, res) => {
     }
 }
 
-export const getallCounsellor = async(req,res) => {
+export const getallCounsellor = async (req, res) => {
     try {
         const counsellor = await Counsellor.find().select("-documents -history -Admin_approved")
 
-        if(!counsellor){
-            return res.status(400).json({ msg : "counsellor not found"})
+        if (!counsellor) {
+            return res.status(400).json({ msg: "counsellor not found" })
         }
 
-        return res.status(200).json({ msg : "all counsellor fetch ", counsellor})
+        return res.status(200).json({ msg: "all counsellor fetch ", counsellor })
 
     } catch (error) {
-        
+
     }
 }
 
-export const getCounsellorByEmail = async(req,res) => {
+export const getCounsellorByEmail = async (req, res) => {
     try {
         const { email } = req.params;
 
-        if(!email){
-            return res.status(404).json({ msg : " email is requied"})
+        if (!email) {
+            return res.status(404).json({ msg: " email is requied" })
         }
 
-        const counsellor = await Counsellor.findOne({ email : email});
+        const counsellor = await Counsellor.findOne({ email: email });
 
-        if(!counsellor){
-            return res.status(404).json({msg : "counsellor not found"})
+        if (!counsellor) {
+            return res.status(404).json({ msg: "counsellor not found" })
         }
 
-        return res.status(200).json({ msg : "counsellor is found" , counsellor})
+        return res.status(200).json({ msg: "counsellor is found", counsellor })
     } catch (error) {
         console.log(error)
     }
 }
+
+export const resetPassword = async (req, res) => {
+    const { Email, newPassword } = req.body;
+
+    try {
+        // Find the user by Email
+        const counsellor = await Counsellor.findOne({ email: Email });
+        const user = await User.findOne({ email: Email })
+
+        // 1️⃣ If neither exists
+        if (!user && !counsellor) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        // 2️⃣ Allow only counsellor
+        if (!counsellor || counsellor.role !== "counsellor") {
+            return res.status(400).json({
+                success: false,
+                message: "Only counsellor can change password",
+            });
+        }
+        // Hash the new password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update the user's password
+        await User.findOneAndUpdate({ email: Email }, { Password: hashedPassword });
+
+        return res.status(200).json({
+            success: true,
+            message: "Password updated successfully",
+        });
+    } catch (error) {
+        console.error(`Error during password reset: ${error}`);
+        return res.status(500).json({
+            success: false,
+            message: "Password reset failed",
+            error: error.message,
+        });
+    }
+};

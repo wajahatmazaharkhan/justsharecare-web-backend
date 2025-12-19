@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { upload } from "../middlewares/multer.middlewares.js";
-import {CounsellorSignup ,CounsellorLogin,getallCounsellor ,getCounsellorByEmail }from "../controllers/index.js"
+import {CounsellorSignup ,CounsellorLogin,getallCounsellor ,getCounsellorByEmail ,resetPassword }from "../controllers/index.js"
 
 export const counsellorRouter = Router();
 
@@ -16,3 +16,4 @@ counsellorRouter.post('/signup', upload.fields([
 counsellorRouter.post("/login",CounsellorLogin);
 counsellorRouter.get("/getcounsellor",getallCounsellor);
 counsellorRouter.get("/getcounsellorbyemail/:email",getCounsellorByEmail);
+counsellorRouter.post("/changepassword",resetPassword);
