@@ -1,27 +1,31 @@
-import jwt from 'jsonwebtoken'
+import jwt from "jsonwebtoken";
 import { User } from "../models/User.models.js";
 
 const auth = (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1]
-  if (!token) return res.status(401).json({ msg: 'No token' })
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ msg: "No token" });
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET)
-    req.user = decoded
-    next()
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    req.user = decoded;
+    next();
   } catch (err) {
-    return res.status(401).json({ msg: 'Invalid token' })
+    return res.status(401).json({ msg: "Invalid token" });
   }
-}
+};
 
-export default auth
+export default auth;
 
 // only admin middleware
 export const adminVerify = async (req, res, next) => {
   try {
-    const token = req.cookies.authToken || req.header("Authorization")?.replace("Bearer ", "");
+    const token =
+      req.cookies.authToken ||
+      req.header("Authorization")?.replace("Bearer ", "");
     if (!token) {
-      return res.status(401).json({ message: "Unauthorized: No token provided" });
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: No token provided" });
     }
 
     let decoded;
@@ -46,9 +50,13 @@ export const adminVerify = async (req, res, next) => {
 // only counsellor middleware
 export const counsellorVerify = async (req, res, next) => {
   try {
-    const token = req.cookies.authToken || req.header("Authorization")?.replace("Bearer ", "");
+    const token =
+      req.cookies.authToken ||
+      req.header("Authorization")?.replace("Bearer ", "");
     if (!token) {
-      return res.status(401).json({ message: "Unauthorized: No token provided" });
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: No token provided" });
     }
 
     let decoded;
@@ -59,8 +67,10 @@ export const counsellorVerify = async (req, res, next) => {
     }
 
     const user = await User.findById(decoded.userId);
-    if (!user || user.role !== "counsellor" ) {
-      return res.status(403).json({ message: "Access denied: Counsellors only" });
+    if (!user || user.role !== "counsellor") {
+      return res
+        .status(403)
+        .json({ message: "Access denied: Counsellors only" });
     }
 
     req.user = user;
