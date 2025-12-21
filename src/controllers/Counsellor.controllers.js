@@ -1,173 +1,226 @@
-import { User } from "../models/User.models.js";
-import { Counsellor } from "../models/Counsellor.models.js";
-import { ImagekitFileUploader } from "../services/imagekit.services.js";
-import {
-  CounsellorLoginValiation,
-  CounsellorValidation,
-} from "../validator/Counsellor.validation.js";
-import bcrypt from "bcryptjs";
-import { asyncHandler } from "../utils/async-handler.js";
+import { User } from "../models/User.models.js"
+import { Counsellor } from "../models/Counsellor.models.js"
+import { ImagekitFileUploader } from "../services/imagekit.services.js"
+import { CounsellorLoginValiation, CounsellorValidation } from "../validator/Counsellor.validation.js"
+import bcrypt from "bcryptjs"
 
-export const CounsellorSignup = asyncHandler(async (req, res) => {
-  const data = CounsellorValidation.parse(req.body);
+export const CounsellorSignup = async (req, res) => {
+    try {
+        const data = CounsellorValidation.parse(req.body);
 
-  // Check if email exists
-  const existing = await User.findOne({ email: data.email });
-  if (existing) {
-    return res.status(400).json({ msg: "Email already registered" });
-  }
+        // Check if email exists
+        const existing = await User.findOne({ email: data.email });
+        if (existing) {
+            return res.status(400).json({ msg: "Email already registered" });
+        }
 
-  const user = await User.create({
-    fullname: data.fullname,
-    email: data.email,
-    Password: data.Password,
-    phone_number: data.contact_number,
-    dob: data.dob,
-    gender: data.gender,
-    preferred_language: data.preferred_language,
-    timezone: data.timezone,
-    role: "counsellor",
-  });
+        const user = await User.create({
+            fullname: data.fullname,
+            email: data.email,
+            Password: data.Password,
+            phone_number: data.contact_number,
+            dob: data.dob,
+            gender: data.gender,
+            preferred_language: data.preferred_language,
+            timezone: data.timezone,
+            role: "counsellor"
+        });
 
-  /* ---------------------------------------------------------
+        /* ---------------------------------------------------------
        HANDLE FILES UPLOAD VIA MULTER
     --------------------------------------------------------- */
-  const f = req.files;
+        const f = req.files;
 
-  console.log("BODY:", req.body);
-  console.log("FILES:", req.files);
+        console.log("BODY:", req.body);
+        console.log("FILES:", req.files);
 
-  const uploadIfExists = async (file) => {
-    return file
-      ? await ImagekitFileUploader(file.path, file.originalname)
-      : null;
-  };
 
-  const governmentID = await uploadIfExists(f?.government_id?.[0]);
-  const profilePicture = await uploadIfExists(f?.profile_picture?.[0]);
-  const qualificationCert = await uploadIfExists(
-    f?.qualification_certificates?.[0]
-  );
-  const licenceDoc = await uploadIfExists(f?.licence?.[0]);
-  const experienceLetter = await uploadIfExists(f?.experince_letter?.[0]);
-  const additionalDocs = await uploadIfExists(f?.additional_documents?.[0]);
+        const uploadIfExists = async (file) => {
+            return file ? await ImagekitFileUploader(file.path, file.originalname) : null;
+        };
 
-  /* ---------------------------------------------------------
+        const governmentID = await uploadIfExists(f?.government_id?.[0]);
+        const profilePicture = await uploadIfExists(f?.profile_picture?.[0]);
+        const qualificationCert = await uploadIfExists(f?.qualification_certificates?.[0]);
+        const licenceDoc = await uploadIfExists(f?.licence?.[0]);
+        const experienceLetter = await uploadIfExists(f?.experince_letter?.[0]);
+        const additionalDocs = await uploadIfExists(f?.additional_documents?.[0]);
+
+        /* ---------------------------------------------------------
            CREATE COUNSELLOR PROFILE
         --------------------------------------------------------- */
-  const profile = await Counsellor.create({
-    user_id: user._id,
-    fullname: data.fullname,
-    email: data.email,
-    dob: data.dob,
-    gender: data.gender,
-    contact_number: data.contact_number,
-    counselling_type: data.counselling_type,
-    specialties: data.specialties,
-    bio: data.bio,
-    qualifications: data.qualifications,
-    years_experience: data.years_experience,
-    languages: data.languages,
-    hourly_rate: data.hourly_rate,
-    availability: data.availability,
-    session_type: data.session_type,
-    calendar_integration: data.calendar_integration || false,
+        const profile = await Counsellor.create({
+            user_id: user._id,
+            fullname: data.fullname,
+            email: data.email,
+            dob: data.dob,
+            gender: data.gender,
+            contact_number: data.contact_number,
+            counselling_type: data.counselling_type,
+            specialties: data.specialties,
+            bio: data.bio,
+            qualifications: data.qualifications,
+            years_experience: data.years_experience,
+            languages: data.languages,
+            hourly_rate: data.hourly_rate,
+            availability: data.availability,
+            session_type: data.session_type,
+            calendar_integration: data.calendar_integration || false,
 
-    // STORE DOCUMENTS IN PROPER NESTED STRUCTURE
-    documents: {
-      government_id: governmentID?.url,
-      profile_picture: profilePicture?.url,
-      qualification_certificates: qualificationCert?.url,
-      licence: licenceDoc?.url,
-      experince_letter: experienceLetter?.url || null,
-      additional_documents: additionalDocs?.url || null,
-    },
-  });
+            // STORE DOCUMENTS IN PROPER NESTED STRUCTURE
+            documents: {
+                government_id: governmentID?.url,
+                profile_picture: profilePicture?.url,
+                qualification_certificates: qualificationCert?.url,
+                licence: licenceDoc?.url,
+                experince_letter: experienceLetter?.url || null,
+                additional_documents: additionalDocs?.url || null,
+            },
+        });
 
-  return res.status(201).json({
-    msg: "Counsellor registered successfully",
-    user,
-    profile,
-  });
-});
+        return res.status(201).json({
+            msg: "Counsellor registered successfully",
+            user,
+            profile,
+        });
 
-export const CounsellorLogin = asyncHandler(async (req, res) => {
-  const data = CounsellorLoginValiation.parse(req.body);
 
-  const userExisted = await User.findOne({ email: data.email });
-  const counsellor = await Counsellor.findOne({ email: data.email });
+    } catch (error) {
+        console.log(error)
+    }
+}
 
-  if (!userExisted) {
-    return res.status(404).json({ msg: "user not found" });
-  }
+export const CounsellorLogin = async (req, res) => {
+    try {
+        const data = CounsellorLoginValiation.parse(req.body);
 
-  if (userExisted.role != "counsellor") {
-    return res.status(402).json({ msg: "only counsellor can login" });
-  }
+        const userExisted = await User.findOne({ email: data.email });
+        const counsellor = await Counsellor.findOne({ email: data.email })
 
-  if (!counsellor.Admin_approved) {
-    return res.status(403).json({
-      msg: "Your profile is not approved by admin yet after approved you can login",
-    });
-  }
+        if (!userExisted) {
+            return res.status(404).json({ msg: "user not found" })
+        }
 
-  const user = await userExisted.comparePassword(data.Password);
+        if (userExisted.role != "counsellor") {
+            return res.status(402).json({ msg: "only counsellor can login" })
+        }
 
-  if (!user) {
-    return res.status(400).json({ msg: "email or password maybe not correct" });
-  }
-  const token = userExisted.generateAuthToken();
+        if (!counsellor.Admin_approved) {
+            return res.status(403).json({ msg: "Your profile is not approved by admin yet after approved you can login" });
+        }
 
-  // cookie option
-  const option = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    // secure: false, // Set to true if using HTTPS
-  };
+        const user = await userExisted.comparePassword(data.Password);
 
-  if (user) {
-    res
-      .status(200)
-      .cookie("authToken", token, option)
-      .json({
-        message: "Login successful",
-        token,
-        user: {
-          id: userExisted._id,
-          fullname: userExisted.fullname,
-          email: userExisted.email,
-          role: userExisted.role,
-        },
-      });
-  } else {
-    res.status(401).json({ message: "Invalid email or password." });
-  }
-});
+        if (!user) {
+            return res.status(400).json({ msg: "email or password maybe not correct" })
+        }
+        const token = userExisted.generateAuthToken();
 
-export const getallCounsellor = asyncHandler(async (req, res) => {
-  const counsellor = await Counsellor.find().select(
-    "-documents -history -Admin_approved"
-  );
+        // cookie option
+        const option = {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            // secure: false, // Set to true if using HTTPS
+        };
 
-  if (!counsellor) {
-    return res.status(400).json({ msg: "counsellor not found" });
-  }
+        if (user) {
+            res
+                .status(200)
+                .cookie("authToken", token, option)
+                .json({
+                    message: "Login successful",
+                    token,
+                    user: {
+                        id: userExisted._id,
+                        fullname: userExisted.fullname,
+                        email: userExisted.email,
+                        role: userExisted.role
+                    }
+                });
+        } else {
+            res.status(401).json({ message: "Invalid email or password." });
+        }
 
-  return res.status(200).json({ msg: "all counsellor fetch ", counsellor });
-});
+    } catch (error) {
+        console.log(error)
+    }
+}
 
-export const getCounsellorByEmail = asyncHandler(async (req, res) => {
-  const { email } = req.params;
+export const getallCounsellor = async (req, res) => {
+    try {
+        const counsellor = await Counsellor.find().select("-documents -history -Admin_approved")
 
-  if (!email) {
-    return res.status(404).json({ msg: " email is requied" });
-  }
+        if (!counsellor) {
+            return res.status(400).json({ msg: "counsellor not found" })
+        }
 
-  const counsellor = await Counsellor.findOne({ email: email });
+        return res.status(200).json({ msg: "all counsellor fetch ", counsellor })
 
-  if (!counsellor) {
-    return res.status(404).json({ msg: "counsellor not found" });
-  }
+    } catch (error) {
 
-  return res.status(200).json({ msg: "counsellor is found", counsellor });
-});
+    }
+}
+
+export const getCounsellorByEmail = async (req, res) => {
+    try {
+        const { email } = req.params;
+
+        if (!email) {
+            return res.status(404).json({ msg: " email is requied" })
+        }
+
+        const counsellor = await Counsellor.findOne({ email: email });
+
+        if (!counsellor) {
+            return res.status(404).json({ msg: "counsellor not found" })
+        }
+
+        return res.status(200).json({ msg: "counsellor is found", counsellor })
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+export const resetPassword = async (req, res) => {
+    const { Email, newPassword } = req.body;
+
+    try {
+        // Find the user by Email
+        const counsellor = await Counsellor.findOne({ email: Email });
+        const user = await User.findOne({ email: Email })
+
+        // 1️⃣ If neither exists
+        if (!user && !counsellor) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        // 2️⃣ Allow only counsellor
+        if (!counsellor || counsellor.role !== "counsellor") {
+            return res.status(400).json({
+                success: false,
+                message: "Only counsellor can change password",
+            });
+        }
+        // Hash the new password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update the user's password
+        await User.findOneAndUpdate({ email: Email }, { Password: hashedPassword });
+
+        return res.status(200).json({
+            success: true,
+            message: "Password updated successfully",
+        });
+    } catch (error) {
+        console.error(`Error during password reset: ${error}`);
+        return res.status(500).json({
+            success: false,
+            message: "Password reset failed",
+            error: error.message,
+        });
+    }
+};
