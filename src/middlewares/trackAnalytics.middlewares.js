@@ -22,8 +22,6 @@ export const trackAnalytics = async (req, res, next) => {
       ip: req.ip,
       userAgent: req.headers["user-agent"],
     });
-
-    console.log("📊 Analytics logged:", url);
   } catch (error) {
     console.log("❌ Analytics Error:", error.message);
   }
