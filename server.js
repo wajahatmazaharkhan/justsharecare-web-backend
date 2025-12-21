@@ -24,6 +24,7 @@ import { AppointmentRouter } from "./src/router/Appointments.router.js";
 import { Novu } from "@novu/api";
 import { trackAnalytics } from "./src/middlewares/trackAnalytics.middlewares.js";
 import { analyticsRouter } from "./src/router/Analytics.router.js";
+import { errorHandler } from "./src/middlewares/error-handler.js";
 
 // ===============================================================
 // 🚀 Create Express App Instance
@@ -36,23 +37,39 @@ const app = express();
 dotenv.config({});
 const port = process.env.PORT || 4000;
 
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(",")
+  : [];
+
 // ===============================================================
 // 🌐 CORS Options (Security + Cross-Origin)
 // ===============================================================
 const corsOptions = {
-  origin: ["http://localhost:8080", "http://localhost:3001"], // change to specific domain in production
+  origin: (origin, callback) => {
+    // Allow non-browser requests like postman,requestly
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    // Allow only whitelisted origins
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    // Block everything else
+    return callback(new Error("CORS blocked for origin", origin));
+  },
   credentials: true,
-  methods: "GET, POST, DELETE, PATCH, HEAD, PUT, OPTIONS",
+  method: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+
   allowedHeaders: [
     "Content-Type",
     "Authorization",
-    "Access-Control-Allow-Credentials",
     "cache-control",
     "svix-id",
     "svix-timestamp",
     "svix-signature",
   ],
-  exposedHeaders: ["Authorization"],
 };
 
 // ===============================================================
@@ -63,6 +80,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.static("/tmp", { index: false }));
+app.use(errorHandler);
 app.set("trust proxy", true);
 app.use(trackAnalytics);
 

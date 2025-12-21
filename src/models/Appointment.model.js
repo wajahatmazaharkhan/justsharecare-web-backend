@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { mongo } from "mongoose";
 
 const appointmentSchema = new mongoose.Schema({
 
@@ -69,4 +69,4 @@ const appointmentSchema = new mongoose.Schema({
 });
 
 
-export const Appointment =  mongoose.model('Appointment', appointmentSchema)
+export const Appointment = mongoose.models.Appointment || mongoose.model('Appointment', appointmentSchema)
