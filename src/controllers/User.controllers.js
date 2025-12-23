@@ -11,11 +11,12 @@ import {
   AdminLoginValidation,
 } from "../validator/User.validation.js";
 import { asyncHandler } from "../utils/async-handler.js";
+import api_client from "../services/api-client.js";
 
 // signup user controller function //
 export const SignUp = asyncHandler(async (req, res) => {
   const data = SignupValidation.parse(req.body);
-
+  console.log("//=====[DATA]======//\n", data);
   // ✅ Check if user already exists
   const oldUser = await User.findOne({ email: data.email });
 
@@ -45,6 +46,20 @@ export const SignUp = asyncHandler(async (req, res) => {
     });
   }
 
+  // ===== || Send OTP to User || ===== //
+
+  try {
+    const otpResponse = await api_client.post(
+      `/api/user/otp-for-password/${data.email}`
+    );
+    console.log("// ===== || OTP RESPONSE || ====== //\n", otpResponse.data);
+  } catch (error) {
+    console.log(
+      "// ===== || OTP SENDING FAILURE || ====== //\n",
+      error.response.data
+    );
+  }
+
   return res.status(201).json({
     success: true,
     msg: "User created successfully",
@@ -63,10 +78,17 @@ export const SignUp = asyncHandler(async (req, res) => {
 // login user controller function //
 export const Login = asyncHandler(async (req, res) => {
   const data = LoginValidation.parse(req.body);
-
+  console.log("//=====[DATA]======//\n", data);
   // get existed user
 
   const userExisted = await User.findOne({ email: data.email });
+
+  if (!userExisted) {
+    return res
+      .status(404)
+      .json({ msg: "Account not found! Please check email." });
+  }
+
   const user = await userExisted.comparePassword(data.Password);
 
   await User.updateOne(
@@ -379,11 +401,13 @@ export const resetPassword = asyncHandler(async (req, res) => {
     });
   }
 
-  user.Password = await bcrypt.hash(newPassword, 10);
+  // ✅ DO NOT hash here
+  user.Password = newPassword;
+
   user.passwordOtpVerify = false;
   user.otpExpiry = undefined;
 
-  await user.save();
+  await user.save(); // pre("save") hashes ONCE
 
   return res.status(200).json({
     success: true,
