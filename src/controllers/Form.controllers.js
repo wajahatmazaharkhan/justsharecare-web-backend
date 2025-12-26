@@ -18,6 +18,8 @@
 // ===============================================
 
 import { Form } from "../models/Form.models.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/async-handler.js";
 import { FormValidation } from "../validator/Form.validation.js";
 
@@ -36,9 +38,5 @@ export const FormController = asyncHandler(async (req, res) => {
   }
 
   // 3. Success response
-  res.status(201).json({
-    success: true,
-    msg: "Form created successfully",
-    form: newform,
-  });
+  res.status(201).json(new ApiResponse(201, { form: newform }, "ok"));
 });

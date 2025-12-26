@@ -26,6 +26,7 @@ import { trackAnalytics } from "./src/middlewares/trackAnalytics.middlewares.js"
 import { analyticsRouter } from "./src/router/Analytics.router.js";
 import { errorHandler } from "./src/middlewares/error-handler.js";
 import { serviceRouter } from "./src/router/services.router.js";
+import { ApiResponse } from "./src/utils/ApiResponse.js";
 
 // ===============================================================
 // 🚀 Create Express App Instance
@@ -89,7 +90,7 @@ app.use(trackAnalytics);
 // 🏠 Default Route
 // ===============================================================
 app.get("/", (req, res) => {
-  res.status(200).json({ msg: "Web server is running healthy!" });
+  res.status(200).json(new ApiResponse(200, null, "Web Server is Running..."));
 });
 
 // ===============================================================
@@ -112,7 +113,7 @@ app.use("/api/availability", AvailabilityRouter);
 app.use("/api/counsellor", counsellorRouter);
 app.use("/api/appointments", AppointmentRouter);
 app.use("/analytics", analyticsRouter);
-app.use("/api/service",serviceRouter);
+app.use("/api/service", serviceRouter);
 // Example: http://localhost:4000/api/form/submit
 
 // Novu Notification Service Instance
@@ -126,6 +127,6 @@ export const novu = new Novu({
 // ===============================================================
 connectToDatabase().then(() => {
   app.listen(port, () => {
-    console.log(`🔥 Server is running on port: ${port}`);
+    console.log(`Server is running on port: ${port}`);
   });
 });

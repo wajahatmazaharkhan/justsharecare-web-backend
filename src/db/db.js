@@ -9,7 +9,7 @@ const connectToDatabase = async () => {
     try {
         console.log(`Connecting to Database...`)
         const dbConnection = await mongoose.connect(mongo_uri);
-        console.log(`Database connection successful 🎉 at ${dbConnection.connection.host}`);
+        console.log(`Database connection successful at ${dbConnection.connection.host}`);
     } catch (error) {
         console.log(`Database connection error : ${error}`);
         process.exit(0);

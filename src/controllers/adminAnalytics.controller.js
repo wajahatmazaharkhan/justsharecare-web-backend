@@ -2,6 +2,7 @@ import { PageAnalytics } from "../models/PageAnalytics.model.js";
 import { User } from "../models/User.models.js";
 import { Appointment } from "../models/Appointment.model.js";
 import { asyncHandler } from "../utils/async-handler.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 
 export const analyticsDashboard = asyncHandler(async (req, res) => {
   /* ------------------ DATE RANGES ------------------ */
@@ -82,26 +83,31 @@ export const analyticsDashboard = asyncHandler(async (req, res) => {
         100;
 
   /* ------------------ RESPONSE ------------------ */
-  return res.status(200).json({
-    success: true,
-    analytics: {
-      traffic: {
-        totalVisits,
-        pages,
-        daily,
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        analytics: {
+          traffic: {
+            totalVisits,
+            pages,
+            daily,
+          },
+          users: {
+            totalUsers,
+            usersThisWeek,
+            usersLastWeek,
+            growthPercentage: Number(userGrowthPercentage.toFixed(2)),
+          },
+          appointments: {
+            totalAppointments,
+            appointmentsThisWeek,
+            appointmentsLastWeek,
+            growthPercentage: Number(appointmentGrowthPercentage.toFixed(2)),
+          },
+        },
       },
-      users: {
-        totalUsers,
-        usersThisWeek,
-        usersLastWeek,
-        growthPercentage: Number(userGrowthPercentage.toFixed(2)),
-      },
-      appointments: {
-        totalAppointments,
-        appointmentsThisWeek,
-        appointmentsLastWeek,
-        growthPercentage: Number(appointmentGrowthPercentage.toFixed(2)),
-      },
-    },
-  });
+      "ok"
+    )
+  );
 });

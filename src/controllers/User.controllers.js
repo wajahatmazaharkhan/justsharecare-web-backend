@@ -11,27 +11,23 @@ import {
   AdminLoginValidation,
 } from "../validator/User.validation.js";
 import { asyncHandler } from "../utils/async-handler.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 
 // signup user controller function //
 export const SignUp = asyncHandler(async (req, res) => {
   const data = SignupValidation.parse(req.body);
 
-  // ✅ Check if user already exists
   const oldUser = await User.findOne({ email: data.email });
-
   if (oldUser) {
-    return res.status(409).json({
-      success: false,
-      msg: "User already exists",
-    });
+    return res.status(409).json(new ApiError(409, "User Already Exists"));
   }
 
-  // ✅ Create user with additional fields
   const newUser = await User.create({
     fullname: data.fullname,
     email: data.email,
     phone_number: data.phone_number,
-    Password: data.Password, // model hashes it
+    Password: data.Password,
     dob: data.dob,
     gender: data.gender,
     timezone: data.timezone,
@@ -39,25 +35,24 @@ export const SignUp = asyncHandler(async (req, res) => {
   });
 
   if (!newUser) {
-    return res.status(400).json({
-      success: false,
-      msg: "User not created",
-    });
+    return res.status(400).json(new ApiError(400, "User not created"));
   }
 
-  return res.status(201).json({
-    success: true,
-    msg: "User created successfully",
-    user: {
-      fullname: newUser.fullname,
-      email: newUser.email,
-      phone_number: newUser.phone_number,
-      dob: newUser.dob,
-      gender: newUser.gender,
-      timezone: newUser.timezone,
-      preferred_language: newUser.preferred_language,
-    },
-  });
+  return res.status(201).json(
+    new ApiResponse(
+      201,
+      {
+        fullname: newUser.fullname,
+        email: newUser.email,
+        phone_number: newUser.phone_number,
+        dob: newUser.dob,
+        gender: newUser.gender,
+        timezone: newUser.timezone,
+        preferred_language: newUser.preferred_language,
+      },
+      "User created successfully"
+    )
+  );
 });
 
 // login user controller function //
@@ -87,39 +82,44 @@ export const Login = asyncHandler(async (req, res) => {
     res
       .status(200)
       .cookie("authToken", token, option)
-      .json({
-        message: "Login successful",
-        token,
-        user: {
-          id: userExisted._id,
-          fullname: userExisted.fullname,
-          email: userExisted.email,
-          role: userExisted.role,
-        },
-      });
+      .json(
+        new ApiResponse(
+          200,
+          {
+            token,
+            user: {
+              id: userExisted._id,
+              fullname: userExisted.fullname,
+              email: userExisted.email,
+              role: userExisted.role,
+            },
+          },
+          "Login Successful"
+        )
+      );
   } else {
-    res.status(401).json({ message: "Invalid email or password." });
+    res.status(401).json(new ApiError(401, "Invalid Email or Password"));
   }
 });
 
-// admin mogin controller function //
+// admin Login controller function //
 export const amdinLogin = asyncHandler(async (req, res) => {
   const data = AdminLoginValidation.parse(req.body);
 
   const userExisted = await User.findOne({ email: data.email });
 
   if (!userExisted) {
-    return res.status(404).json({ msg: "user not found" });
+    return res.status(404).json(new ApiError(404, "User Not Found"));
   }
 
   if (userExisted.role != "admin") {
-    return res.status(402).json({ msg: "only admin can login" });
+    return res.status(402).json(new ApiError(402, "Only Admins can Login"));
   }
 
   const user = await userExisted.comparePassword(data.Password);
 
   if (!user) {
-    return res.status(400).json({ msg: "email or password maybe not correct" });
+    return res.status(400).json(new ApiError(400, "Invalid Email or Password"));
   }
   const token = userExisted.generateAuthToken();
 
@@ -134,18 +134,23 @@ export const amdinLogin = asyncHandler(async (req, res) => {
     res
       .status(200)
       .cookie("authToken", token, option)
-      .json({
-        message: "Login successful",
-        token,
-        user: {
-          id: userExisted._id,
-          fullname: userExisted.fullname,
-          email: userExisted.email,
-          role: userExisted.role,
-        },
-      });
+      .json(
+        new ApiResponse(
+          200,
+          {
+            token,
+            user: {
+              id: userExisted._id,
+              fullname: userExisted.fullname,
+              email: userExisted.email,
+              role: userExisted.role,
+            },
+          },
+          "Login Successful"
+        )
+      );
   } else {
-    res.status(401).json({ message: "Invalid email or password." });
+    res.status(401).json(new ApiError(401, "Invalid Email or Password"));
   }
 });
 
@@ -154,20 +159,14 @@ export const sendEmailOtp = asyncHandler(async (req, res) => {
   const { email } = req.params; // use lowercase standard
 
   if (!email) {
-    return res.status(400).json({
-      success: false,
-      msg: "Email is required",
-    });
+    return res.status(400).json(new ApiError(400, "Email Address is Required"));
   }
 
   // ✅ Find user by email
   const userFound = await User.findOne({ email });
 
   if (!userFound) {
-    return res.status(404).json({
-      success: false,
-      msg: "User not found",
-    });
+    return res.status(404).json(new ApiError(404, "User not Found"));
   }
 
   // ✅ Generate 4-digit OTP
@@ -187,10 +186,9 @@ export const sendEmailOtp = asyncHandler(async (req, res) => {
   // ✅ Send OTP email
   await sendOtpEmail(userFound.fullname, userFound.email, otp);
 
-  return res.status(200).json({
-    success: true,
-    msg: "OTP sent successfully to your email",
-  });
+  return res
+    .status(200)
+    .json(new ApiResponse(200, null, "OTP sent successfully!"));
 });
 
 // NEWLY ADDED: Verify OTP Function
@@ -200,28 +198,19 @@ export const VerifyOtp = asyncHandler(async (req, res) => {
 
   // 1. Basic Validation
   if (!email || !otp) {
-    return res.status(400).json({
-      success: false,
-      msg: "Email and OTP are required",
-    });
+    return res.status(400).json(new ApiError(400, "OTP and Email is required"));
   }
 
   // 2. Find User
   const user = await User.findOne({ email });
 
   if (!user) {
-    return res.status(404).json({
-      success: false,
-      msg: "User not found",
-    });
+    return res.status(404).json(new ApiError(404, "User not found"));
   }
 
   // 3. Check if OTP is expired
   if (user.otpExpiry && user.otpExpiry < Date.now()) {
-    return res.status(400).json({
-      success: false,
-      msg: "OTP has expired. Please request a new one.",
-    });
+    return res.status(400).json(new ApiError(400, "OTP Expired. Request new!"));
   }
 
   // 4. Verify OTP
@@ -229,10 +218,9 @@ export const VerifyOtp = asyncHandler(async (req, res) => {
   const isMatch = await bcrypt.compare(otp, user.otp || "");
 
   if (!isMatch) {
-    return res.status(400).json({
-      success: false,
-      msg: "Invalid OTP. Please check your code.",
-    });
+    return res
+      .status(400)
+      .json(new ApiError(400, "Invalid OTP. Please check once!"));
   }
 
   // 5. Success -
@@ -242,10 +230,9 @@ export const VerifyOtp = asyncHandler(async (req, res) => {
 
   await user.save();
 
-  return res.status(200).json({
-    success: true,
-    msg: "Email verified successfully!",
-  });
+  return res
+    .status(200)
+    .json(new ApiResponse(200, null, "Email verified Successfully!"));
 });
 
 // get user history
@@ -253,10 +240,7 @@ export const getHistory = asyncHandler(async (req, res) => {
   const { counsellorId } = req.params;
 
   if (!counsellorId) {
-    return res.status(400).json({
-      success: false,
-      msg: "counsellorId is required",
-    });
+    return res.status(400).json(new ApiError(400, "Counsellor ID is required"));
   }
 
   // ✅ Find counsellor and populate history.customerId to get user details
@@ -266,10 +250,7 @@ export const getHistory = asyncHandler(async (req, res) => {
   );
 
   if (!counsellor) {
-    return res.status(404).json({
-      success: false,
-      msg: "Counsellor not found",
-    });
+    return res.status(404).json(new ApiError(404, "Counsellor not Found"));
   }
 
   // ✅ Optionally sort by latest visit first
@@ -277,17 +258,18 @@ export const getHistory = asyncHandler(async (req, res) => {
     (a, b) => b.visitDate - a.visitDate
   );
 
-  return res.status(200).json({
-    success: true,
-    history: sortedHistory,
-  });
+  return res.status(200).json(
+    new ApiResponse(200, {
+      history: sortedHistory,
+    })
+  );
 });
 
 export const passwordOtp = asyncHandler(async (req, res) => {
   const { Email } = req.body;
   const user = await User.findOne({ email: Email });
   if (!user) {
-    return res.status(404).json({ success: false, message: "User not found" });
+    return res.status(404).json(new ApiError(404, "User not found"));
   }
 
   // Generate OTP
@@ -303,10 +285,7 @@ export const passwordOtp = asyncHandler(async (req, res) => {
   // Send OTP Email
   SendOtpForPassword(user.fullname, user.email, otp);
 
-  return res.status(200).json({
-    success: true,
-    message: "OTP sent to your Email",
-  });
+  return res.status(200).json(new ApiResponse(200, "OTP sent successfully!"));
 });
 
 export const VerifyPasswordResetOtp = asyncHandler(async (req, res) => {
@@ -314,28 +293,23 @@ export const VerifyPasswordResetOtp = asyncHandler(async (req, res) => {
 
   // 1. Basic Validation
   if (!email || !otp) {
-    return res.status(400).json({
-      success: false,
-      msg: "Email and OTP are required",
-    });
+    return res
+      .status(400)
+      .json(new ApiError(400, "Email and OTP are required"));
   }
 
   // 2. Find User
   const user = await User.findOne({ email: email });
 
   if (!user) {
-    return res.status(404).json({
-      success: false,
-      msg: "User not found",
-    });
+    return res.status(404).json(new ApiError(404, "User not found"));
   }
 
   // 3. Check if OTP is expired
   if (user.otpExpiry && user.otpExpiry < Date.now()) {
-    return res.status(400).json({
-      success: false,
-      msg: "OTP has expired. Please request a new one.",
-    });
+    return res
+      .status(400)
+      .json(new ApiError(400, "OTP has expired. Please request new one"));
   }
 
   // 4. Verify OTP
@@ -343,10 +317,9 @@ export const VerifyPasswordResetOtp = asyncHandler(async (req, res) => {
   const isMatch = await bcrypt.compare(otp, user.otp || "");
 
   if (!isMatch) {
-    return res.status(400).json({
-      success: false,
-      msg: "Invalid OTP. Please check your code.",
-    });
+    return res
+      .status(400)
+      .json(new ApiError(400, "Invalid OTP. Please check it once"));
   }
 
   // 5. Success -
@@ -357,10 +330,9 @@ export const VerifyPasswordResetOtp = asyncHandler(async (req, res) => {
 
   await user.save();
 
-  return res.status(200).json({
-    success: true,
-    msg: "Email verified successfully!",
-  });
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Email Verified Successfully"));
 });
 
 // Add this to your auth-controller.js file
@@ -370,13 +342,15 @@ export const resetPassword = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email: Email });
 
   if (!user) {
-    return res.status(404).json({ message: "User not found" });
+    return res.status(404).json(new ApiError(404, "User not found"));
   }
 
   if (!user.passwordOtpVerify || user.otpExpiry < Date.now()) {
-    return res.status(403).json({
-      message: "OTP verification required or expired",
-    });
+    return res
+      .status(403)
+      .json(
+        new ApiError(403, "Account not verified via OTP. || OR || OTP Expired")
+      );
   }
 
   user.Password = await bcrypt.hash(newPassword, 10);
@@ -385,8 +359,7 @@ export const resetPassword = asyncHandler(async (req, res) => {
 
   await user.save();
 
-  return res.status(200).json({
-    success: true,
-    message: "Password updated successfully",
-  });
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Password has been Reset successfully!"));
 });

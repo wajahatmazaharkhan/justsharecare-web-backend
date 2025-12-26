@@ -1,14 +1,5 @@
 import express from "express";
-import {
-  createAppointment,
-  deleteAppointment,
-  getAllAppointments,
-  getAppointmentById,
-  getCounsellorAppointments,
-  getUserAppointments,
-  updateAppointment,
-  updateAppointmentStatus,
-} from "../controllers/Appointment.controller.js";
+import { AppointmentController } from "../controllers/index.js";
 import auth, {
   adminVerify,
   counsellorVerify,
@@ -16,25 +7,29 @@ import auth, {
 
 const AppointmentRouter = express.Router();
 
-// create  user-books-appointment
-AppointmentRouter.post("/", auth, createAppointment);
+// create user-books-appointment
+AppointmentRouter.post("/", auth, AppointmentController.createAppointment);
 
-// Read
-AppointmentRouter.get("/user", auth, getUserAppointments);
+// read
+AppointmentRouter.get("/user", auth, AppointmentController.getUserAppointments);
 AppointmentRouter.get(
   "/counsellor",
   auth,
   counsellorVerify,
-  getCounsellorAppointments
+  AppointmentController.getCounsellorAppointments
 );
-// AppointmentRouter.get("/", getAllAppointments);
-// AppointmentRouter.get("/:id", getAppointmentById);
+// AppointmentRouter.get("/", AppointmentController.getAllAppointments);
+// AppointmentRouter.get("/:id", AppointmentController.getAppointmentById);
 
 // update
-AppointmentRouter.patch("/:id", auth, updateAppointment);
-AppointmentRouter.patch("/:id/status", auth, updateAppointmentStatus);
+AppointmentRouter.patch("/:id", auth, AppointmentController.updateAppointment);
+AppointmentRouter.patch(
+  "/:id/status",
+  auth,
+  AppointmentController.updateAppointmentStatus
+);
 
 // delete
-AppointmentRouter.delete("/:id", auth, deleteAppointment);
+AppointmentRouter.delete("/:id", auth, AppointmentController.deleteAppointment);
 
 export { AppointmentRouter };

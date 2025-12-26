@@ -20,6 +20,8 @@
 import { ZodError } from "zod";
 import { instance } from "../../server.js";
 import { OrderValidation } from "../validator/Razorpay.validation.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 
 export const createRazorpayOrder = async (req, res) => {
   let options;
@@ -28,23 +30,20 @@ export const createRazorpayOrder = async (req, res) => {
   } catch (error) {
     if (error instanceof ZodError) {
       console.error("Validation Failed!", error.message);
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: error.errors,
-      });
+      return res
+        .status(400)
+        .json(new ApiError(404, "Validation failure", error.errors));
     } else {
       console.error("An unexpected error occurred during validation:", error);
-      return res.status(500).json({
-        success: false,
-        message: "Internal server error during validation",
-      });
+      return res.status(500).json(new ApiError(500, "Internal Server Error"));
     }
   }
   if (!options.currency || !options.amount) {
-    return res.status(404).json({ msg: "All fields are required" });
+    return res.status(404).json(new ApiError(404, "all fields are required"));
   }
   const order = await instance.orders.create(options);
   console.log("Order created", order);
-  return res.status(200).json({ success: true, order });
+  return res
+    .status(200)
+    .json(new ApiResponse(200, order, "order created successfully"));
 };

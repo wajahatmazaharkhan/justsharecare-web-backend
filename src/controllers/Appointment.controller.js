@@ -2,6 +2,8 @@ import { Appointment } from "../models/Appointments.model.js";
 import { User } from "../models/User.models.js";
 import { Counsellor } from "../models/Counsellor.models.js";
 import { asyncHandler } from "../utils/async-handler.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { ApiError } from "../utils/ApiError.js";
 
 // ........Get All Appointments.................
 export const getAllAppointments = asyncHandler(async (req, res) => {
@@ -9,11 +11,12 @@ export const getAllAppointments = asyncHandler(async (req, res) => {
     .populate("user_id", "name email")
     .populate("counsellor_id", "name");
 
-  res.status(200).json({
-    success: true,
-    result: appointments.length,
-    data: appointments,
-  });
+  res.status(200).json(
+    new ApiResponse(200, {
+      result: appointments.length,
+      data: appointments,
+    })
+  );
 });
 
 //............ Get Appointment details by Id..........
@@ -24,12 +27,9 @@ export const getAppointmentById = asyncHandler(async (req, res) => {
     .populate("counsellor_id", "fullname email");
 
   if (!appointment) {
-    return res.status(400).json({ msg: "No Appointment found" });
+    return res.status(400).json(new ApiError(400, "No Appointment found"));
   }
-  res.status(200).json({
-    msg: "Succesfully fetched the details of appointment",
-    data: appointment,
-  });
+  res.status(200).json(new ApiResponse(200, appointment, "ok"));
 });
 
 //.............. Create Appointment.....................
@@ -47,18 +47,18 @@ export const createAppointment = asyncHandler(async (req, res) => {
 
   // 1️⃣ Basic validation
   if (!counsellor_id || !scheduled_at || !duration_minutes || !price) {
-    return res.status(400).json({
-      message: "Missing required fields",
-    });
+    return res
+      .status(400)
+      .json(new ApiError(400, "Required fields are missing..."));
   }
 
   const start = new Date(scheduled_at);
 
   // Prevent past appointments
   if (start < new Date()) {
-    return res.status(400).json({
-      message: "Appointment time must be in the future",
-    });
+    return res
+      .status(400)
+      .json(new ApiError(400, "Appointment time must be in future!"));
   }
   const end = new Date(start.getTime() + duration_minutes * 60000);
 
@@ -78,9 +78,14 @@ export const createAppointment = asyncHandler(async (req, res) => {
   });
 
   if (conflict) {
-    return res.status(409).json({
-      message: "Counsellor already booked for this time",
-    });
+    return res
+      .status(409)
+      .json(
+        new ApiError(
+          409,
+          "counsellor is already booked with another session for given time"
+        )
+      );
   }
 
   const appointment = await Appointment.create({
@@ -93,10 +98,7 @@ export const createAppointment = asyncHandler(async (req, res) => {
     notes,
   });
 
-  res.status(201).json({
-    success: true,
-    data: appointment,
-  });
+  res.status(201).json(new ApiResponse(201, appointment));
 });
 
 export const getUserAppointments = asyncHandler(async (req, res) => {
@@ -151,13 +153,14 @@ export const getUserAppointments = asyncHandler(async (req, res) => {
     });
   }
 
-  res.status(200).json({
-    success: true,
-    page: Number(page),
-    limit: Number(limit),
-    count: appointments.length,
-    data: appointments,
-  });
+  res.status(200).json(
+    new ApiResponse(200, {
+      page: Number(page),
+      limit: Number(limit),
+      count: appointments.length,
+      data: appointments,
+    })
+  );
 });
 
 export const getCounsellorAppointments = asyncHandler(async (req, res) => {
@@ -203,13 +206,14 @@ export const getCounsellorAppointments = asyncHandler(async (req, res) => {
     .skip(skip)
     .limit(Number(limit));
 
-  res.status(200).json({
-    success: true,
-    page: Number(page),
-    limit: Number(limit),
-    count: appointments.length,
-    data: appointments,
-  });
+  res.status(200).json(
+    new ApiResponse(200, {
+      page: Number(page),
+      limit: Number(limit),
+      count: appointments.length,
+      data: appointments,
+    })
+  );
 });
 
 // ..........update Appointment.....................
@@ -230,14 +234,15 @@ export const updateAppointment = asyncHandler(async (req, res) => {
   );
 
   if (!appointment) {
-    return res.status(404).json({ message: "Appointment not found" });
+    return res.status(404).json(new ApiError(404, "Appointment not found"));
   }
 
-  res.status(200).json({
-    success: true,
-    message: "Appointment updated sucessfully",
-    data: appointment,
-  });
+  res.status(200).json(
+    new ApiResponse(200, {
+      message: "Appointment updated sucessfully",
+      data: appointment,
+    })
+  );
 });
 
 // update the status of appointment
@@ -257,7 +262,7 @@ export const updateAppointmentStatus = asyncHandler(async (req, res) => {
     });
   }
 
-  res.status(200).json({ success: true, data: appointment });
+  res.status(200).json(new ApiResponse(200, appointment));
 });
 
 //................. Delete Appointment..............
@@ -272,11 +277,10 @@ export const deleteAppointment = asyncHandler(async (req, res) => {
   if (!appointment) {
     return res
       .status(404)
-      .json({ message: "Appointment not found or  already deleted" });
+      .json(new ApiError(404, "appointment not found or deleted"));
   }
 
-  res.status(200).json({
-    success: true,
-    message: "Appointment deleted successfully (soft delete)",
-  });
+  res
+    .status(200)
+    .json(new ApiResponse(200, null, "appointment deletion successful (soft)"));
 });

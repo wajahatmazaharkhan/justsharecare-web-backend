@@ -1,84 +1,89 @@
 import { Service } from "../models/service.model.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/async-handler.js";
 
-
 export const addService = asyncHandler(async (req, res) => {
-    const { title, description, slug } = req.body;
+  const { title, description, slug } = req.body;
 
-    if (!title || !description || !slug) {
-        return res.status(400).json({ msg: "all fields are required" })
-    }
+  if (!title || !description || !slug) {
+    return res.status(400).json(new ApiError(400, "all fields are required"));
+  }
 
-    const ExistedTitle = await Service.findOne({title});
+  const ExistedTitle = await Service.findOne({ title });
 
-    if(ExistedTitle){
-        return res.status(400).json({ msg : "title alreay existed"})
-    }
+  if (ExistedTitle) {
+    return res.status(400).json(new ApiError(400, "Title already exists"));
+  }
 
-    const newService = await Service.create({
-        title,
-        description,
-        slug
-    })
+  const newService = await Service.create({
+    title,
+    description,
+    slug,
+  });
 
-    if (!newService) {
-        return res.status(402).json({ msg: "service is not created" })
-    }
+  if (!newService) {
+    return res.status(402).json(new ApiError(402, "service not created"));
+  }
 
-    return res.status(200).json({ msg: "service is created", newService })
-})
+  return res
+    .status(200)
+    .json(new ApiResponse(200, newService, "new service created"));
+});
 
-export const getAllService = asyncHandler( async(req,res) => {
+export const getAllService = asyncHandler(async (req, res) => {
+  const allservice = await Service.find();
 
-    const allservice = await Service.find();
+  if (!allservice) {
+    return res.status(404).json(new ApiError(404, "no service found"));
+  }
 
-    if(!allservice){
-        return res.status(404).json({ msg : " service not found"})
-    }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, allservice, "all services fetched"));
+});
 
-    return res.status(200).json({ msg : "all service found" , allservice})
-})
+export const getServiceBySlug = asyncHandler(async (req, res) => {
+  const { slug } = req.params;
 
-export const getServiceBySlug = asyncHandler( async(req,res) => {
-    
-    const {slug} = req.params;
+  if (!slug) {
+    return res.status(404).json(new ApiError(404, "Slug not found"));
+  }
 
-    if(!slug){
-        return res.status(404).josn({ msg : "slug not fount"})
-    }
+  const service = await Service.find({ slug: slug });
 
-    const service = await Service.find({ slug : slug});
+  if (!service) {
+    return res.status(404).json(new ApiError(404, "slug not found"));
+  }
 
-    if(!service){
-        return res.status(404).json({ msg : "slug not found"})
-    }
-
-    return res.status(200).json({ msg : "services found" , service});
-})
+  return res.status(200).json(new ApiResponse(200, service, "services found"));
+});
 
 export const removeService = asyncHandler(async (req, res) => {
   const { title } = req.params;
 
   if (!title) {
-    return res.status(400).json({ msg: "Slug is required" });
+    return res.status(400).json(new ApiError(400, "slug is required"));
   }
 
   const service = await Service.findOne({ title });
 
   if (!service) {
-    return res.status(404).json({ msg: "Service not found" });
+    return res.status(404).json(new ApiError(404, "service not found"));
   }
 
   await Service.deleteOne({ title });
 
-  return res.status(200).json({
-    msg: "Service removed successfully",
-  });
+  return res.status(200).json(new ApiResponse(200, null, "service deleted"));
 });
 
 export const updateServiceByTitle = asyncHandler(async (req, res) => {
   const { oldTitle } = req.params;
   const { title, description, category } = req.body;
+
+  if (!oldTitle || !title || !description || !category) {
+    return res.status(400).json(new ApiError("missing required fields..."));
+  }
 
   const updateData = {};
   if (title) updateData.title = title;
@@ -92,11 +97,8 @@ export const updateServiceByTitle = asyncHandler(async (req, res) => {
   );
 
   if (!updatedService) {
-    return res.status(404).json({ msg: "Service not found" });
+    return res.status(404).json(new ApiError(404, "service not found"));
   }
 
-  res.status(200).json({ msg: "Service updated", service: updatedService });
+  res.status(200).json(new ApiResponse(200, updatedService, "service updated"));
 });
-
-
-
