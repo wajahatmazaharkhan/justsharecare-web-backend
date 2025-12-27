@@ -8,35 +8,42 @@ const counsellorSchema = new mongoose.Schema({
     index: true
   },
 
-  fullname : {
-    type : String
+  services: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Service",
+    }
+  ],
+
+  fullname: {
+    type: String
   },
 
-  email : {
-    type : String 
+  email: {
+    type: String
   },
 
-  gender : {
-    type : String
+  gender: {
+    type: String
   },
 
-  phone_number : {
-    type : String
+  phone_number: {
+    type: String
   },
 
-  gender : {
-    type : String
+  gender: {
+    type: String
   },
 
-  role : {
-     type : String,
-     default : "counsellor"
+  role: {
+    type: String,
+    default: "counsellor"
   },
 
-  dob : {
-    type : String
-    } ,
- 
+  dob: {
+    type: String
+  },
+
   counselling_type: {
     type: String,
     required: true
@@ -115,7 +122,7 @@ const counsellorSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  
+
   status: {
     type: String,
     enum: ["active", "inactive", "banned"],

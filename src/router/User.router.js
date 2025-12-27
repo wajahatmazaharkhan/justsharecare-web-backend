@@ -1,16 +1,6 @@
 import { Router } from "express";
 
-import {
-  SignUp,
-  Login,
-  adminLogin,
-  sendEmailOtp,
-  getHistory,
-  VerifyPasswordResetOtp,
-  resetPassword,
-  passwordOtp,
-  VerifyOtp
-} from "../controllers/index.js";
+import { UserController } from "../controllers/index.js";
 import {
   adminVerify,
   counsellorVerify,
@@ -18,15 +8,13 @@ import {
 
 export const userRouter = Router();
 
-userRouter.post("/signup", SignUp);
-userRouter.post("/login", Login);
-userRouter.post("/adminlogin", adminLogin);
-userRouter.post("/otp-for-password/:email", sendEmailOtp);
-userRouter.post("/verifyotp", VerifyOtp)
-userRouter.get("/getHistory", counsellorVerify, getHistory);
-userRouter.get("/getHistoryByAdmin", adminVerify, getHistory);
-userRouter.post("/passwordresetotp", passwordOtp);
-userRouter.post("/verifypasswordotp", VerifyPasswordResetOtp);
-userRouter.post("/resetpassword", resetPassword);
-
-
+userRouter.post("/signup", UserController.SignUp);
+userRouter.post("/login", UserController.Login);
+userRouter.post("/adminlogin", UserController.adminLogin);
+userRouter.post("/otp-for-password/:email", UserController.sendEmailOtp);
+userRouter.post("/verifyotp", UserController.VerifyOtp);
+userRouter.get("/getHistory", counsellorVerify, UserController.getHistory);
+userRouter.get("/getHistoryByAdmin", adminVerify, UserController.getHistory);
+userRouter.post("/passwordresetotp", UserController.passwordOtp);
+userRouter.post("/verifypasswordotp", UserController.VerifyPasswordResetOtp);
+userRouter.post("/resetpassword", UserController.resetPassword);

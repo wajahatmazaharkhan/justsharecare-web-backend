@@ -1,12 +1,6 @@
 import { Router } from "express";
 import { upload } from "../middlewares/multer.middlewares.js";
-import {
-  CounsellorSignup,
-  CounsellorLogin,
-  getallCounsellor,
-  getCounsellorByEmail,
-  updateCounsellor,
-} from "../controllers/index.js";
+import { CounsellorController } from "../controllers/index.js";
 import { counsellorVerify } from "../middlewares/auth.middlewares.js";
 
 export const counsellorRouter = Router();
@@ -21,18 +15,26 @@ counsellorRouter.post(
     { name: "experince_letter", maxCount: 1 },
     { name: "additional_documents", maxCount: 1 },
   ]),
-  CounsellorSignup
+  CounsellorController.CounsellorSignup
 );
 
-counsellorRouter.post("/login", CounsellorLogin);
-counsellorRouter.get("/getcounsellor", getallCounsellor);
-counsellorRouter.get("/getcounsellorbyemail/:email", getCounsellorByEmail);
+counsellorRouter.post("/login", CounsellorController.CounsellorLogin);
+counsellorRouter.get("/getcounsellor", CounsellorController.getallCounsellor);
+counsellorRouter.get(
+  "/getcounsellorbyemail/:email",
+  CounsellorController.getCounsellorByEmail
+);
 
-counsellorRouter.put("/update", counsellorVerify, upload.fields([
-  { name: "government_id", maxCount: 1 },
-  { name: "profile_picture", maxCount: 1 },
-  { name: "qualification_certificates", maxCount: 1 },
-  { name: "licence", maxCount: 1 },
-  { name: "experince_letter", maxCount: 1 },
-  { name: "additional_documents", maxCount: 1 },
-]), updateCounsellor);
+counsellorRouter.put(
+  "/update",
+  counsellorVerify,
+  upload.fields([
+    { name: "government_id", maxCount: 1 },
+    { name: "profile_picture", maxCount: 1 },
+    { name: "qualification_certificates", maxCount: 1 },
+    { name: "licence", maxCount: 1 },
+    { name: "experince_letter", maxCount: 1 },
+    { name: "additional_documents", maxCount: 1 },
+  ]),
+  CounsellorController.updateCounsellor
+);

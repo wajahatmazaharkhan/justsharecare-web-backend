@@ -1,40 +1,8 @@
-// ===============================================
-// Controllers Index File
-// File: index.js
-// ===============================================
-//
-// • This file works as a central export hub for ALL controllers.
-//   Instead of importing controllers individually from each file,
-//   you can import them all from this index.js.
-//
-//     Example:
-//     import { FormController } from "../controllers/index.js";
-//
-// • Helps maintain a clean folder structure and avoids messy imports.
-//
-// • Add new controllers here as your project grows.
-//
-// ===============================================
+// controllers/index.js
 
-import { FormController } from "./Form.controllers.js";
-import { SignUp, Login, adminLogin, sendEmailOtp, VerifyOtp, getHistory, passwordOtp, VerifyPasswordResetOtp, resetPassword } from "./User.controllers.js";
-import { CounsellorSignup, CounsellorLogin, getallCounsellor, getCounsellorByEmail, updateCounsellor } from "./Counsellor.controllers.js";
-
-// Export all controllers together
-export {
-    FormController,
-    SignUp,
-    Login,
-    adminLogin,
-    sendEmailOtp,
-    VerifyOtp,
-    getHistory,
-    CounsellorLogin,
-    CounsellorSignup,
-    getallCounsellor,
-    getCounsellorByEmail,
-    passwordOtp,
-    resetPassword,
-    VerifyPasswordResetOtp,
-    updateCounsellor
-};
+export * as FormController from "./Form.controllers.js";
+export * as UserController from "./User.controllers.js";
+export * as CounsellorController from "./Counsellor.controllers.js";
+export * as ServiceController from "./service.controllers.js";
+export * as AppointmentController from "./Appointment.controller.js";
+export * as AnalyticsController from "./adminAnalytics.controller.js";

@@ -7,6 +7,8 @@ import {
 } from "../validator/Counsellor.validation.js";
 import bcrypt from "bcryptjs";
 import { asyncHandler } from "../utils/async-handler.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 
 export const CounsellorSignup = asyncHandler(async (req, res) => {
   const data = CounsellorValidation.parse(req.body);
@@ -14,7 +16,11 @@ export const CounsellorSignup = asyncHandler(async (req, res) => {
   // Check if email exists
   const existing = await User.findOne({ email: data.email });
   if (existing) {
-    return res.status(400).json({ msg: "Email already registered" });
+    return res
+      .status(400)
+      .json(
+        new ApiError(400, "Account already exists with this Email address!")
+      );
   }
 
   const user = await User.create({
@@ -84,11 +90,9 @@ export const CounsellorSignup = asyncHandler(async (req, res) => {
     },
   });
 
-  return res.status(201).json({
-    msg: "Counsellor registered successfully",
-    user,
-    profile,
-  });
+  return res
+    .status(201)
+    .json(new ApiResponse(200, null, "Counsellor Registration Successful"));
 });
 
 export const CounsellorLogin = asyncHandler(async (req, res) => {
@@ -98,23 +102,32 @@ export const CounsellorLogin = asyncHandler(async (req, res) => {
   const counsellor = await Counsellor.findOne({ email: data.email });
 
   if (!userExisted) {
-    return res.status(404).json({ msg: "user not found" });
+    return res.status(404).json(new ApiError(404, "User not found"));
   }
 
   if (userExisted.role != "counsellor") {
-    return res.status(402).json({ msg: "only counsellor can login" });
+    return res
+      .status(402)
+      .json(new ApiError(402, "Only counsellors can login"));
   }
 
   if (!counsellor.Admin_approved) {
-    return res.status(403).json({
-      msg: "Your profile is not approved by admin yet after approved you can login",
-    });
+    return res
+      .status(403)
+      .json(
+        new ApiError(
+          403,
+          "Your profile is not approved by admin yet after approved you can login"
+        )
+      );
   }
 
   const user = await userExisted.comparePassword(data.Password);
 
   if (!user) {
-    return res.status(400).json({ msg: "email or password maybe not correct" });
+    return res
+      .status(400)
+      .json(new ApiError(400, "email or password maybe not correct"));
   }
   const token = userExisted.generateAuthToken();
 
@@ -129,18 +142,23 @@ export const CounsellorLogin = asyncHandler(async (req, res) => {
     res
       .status(200)
       .cookie("authToken", token, option)
-      .json({
-        message: "Login successful",
-        token,
-        user: {
-          id: userExisted._id,
-          fullname: userExisted.fullname,
-          email: userExisted.email,
-          role: userExisted.role,
-        },
-      });
+      .json(
+        new ApiResponse(
+          200,
+          {
+            token,
+            user: {
+              id: userExisted._id,
+              fullname: userExisted.fullname,
+              email: userExisted.email,
+              role: userExisted.role,
+            },
+          },
+          "Login Successful"
+        )
+      );
   } else {
-    res.status(401).json({ message: "Invalid email or password." });
+    res.status(401).json(new ApiError(401, "Invalid email or password."));
   }
 });
 
@@ -150,26 +168,30 @@ export const getallCounsellor = asyncHandler(async (req, res) => {
   );
 
   if (!counsellor) {
-    return res.status(400).json({ msg: "counsellor not found" });
+    return res.status(400).json(new ApiError(400, "counsellor not found"));
   }
 
-  return res.status(200).json({ msg: "all counsellor fetch ", counsellor });
+  return res
+    .status(200)
+    .json(new ApiResponse(200, counsellor, "All counsellors fetched"));
 });
 
 export const getCounsellorByEmail = asyncHandler(async (req, res) => {
   const { email } = req.params;
 
   if (!email) {
-    return res.status(404).json({ msg: " email is requied" });
+    return res.status(404).json(new ApiError(404, "email is required"));
   }
 
   const counsellor = await Counsellor.findOne({ email: email });
 
   if (!counsellor) {
-    return res.status(404).json({ msg: "counsellor not found" });
+    return res.status(404).json(new ApiError(404, "counsellor not found"));
   }
 
-  return res.status(200).json({ msg: "counsellor is found", counsellor });
+  return res
+    .status(200)
+    .json(new ApiResponse(200, counsellor, "counsellor found"));
 });
 
 export const updateCounsellor = asyncHandler(async (req, res) => {
@@ -178,13 +200,15 @@ export const updateCounsellor = asyncHandler(async (req, res) => {
   // find counsellor profile
   const counsellor = await Counsellor.findOne({ user_id: userId });
   if (!counsellor) {
-    return res.status(404).json({ msg: "Counsellor profile not found" });
+    return res
+      .status(404)
+      .json(new ApiError(404, "Counsellor profile not found"));
   }
 
   // find user profile
   const user = await User.findById(userId);
   if (!user) {
-    return res.status(404).json({ msg: "User not found" });
+    return res.status(404).json(new ApiError(404, "User not found"));
   }
 
   const data = req.body;
@@ -193,14 +217,17 @@ export const updateCounsellor = asyncHandler(async (req, res) => {
   console.log("BODY:", req.body);
   console.log("government_id:", req.body.government_id);
 
-
   const uploadIfExists = async (file) => {
-    return file ? await ImagekitFileUploader(file.path, file.originalname) : null;
+    return file
+      ? await ImagekitFileUploader(file.path, file.originalname)
+      : null;
   };
 
   const governmentID = await uploadIfExists(f?.government_id?.[0]);
   const profilePicture = await uploadIfExists(f?.profile_picture?.[0]);
-  const qualificationCert = await uploadIfExists(f?.qualification_certificates?.[0]);
+  const qualificationCert = await uploadIfExists(
+    f?.qualification_certificates?.[0]
+  );
   const licenceDoc = await uploadIfExists(f?.licence?.[0]);
   const experienceLetter = await uploadIfExists(f?.experince_letter?.[0]);
   const additionalDocs = await uploadIfExists(f?.additional_documents?.[0]);
@@ -213,10 +240,13 @@ export const updateCounsellor = asyncHandler(async (req, res) => {
   // Update files in Counsellor schema
   if (governmentID) counsellor.documents.government_id = governmentID.url;
   if (profilePicture) counsellor.documents.profile_picture = profilePicture.url;
-  if (qualificationCert) counsellor.documents.qualification_certificates = qualificationCert.url;
+  if (qualificationCert)
+    counsellor.documents.qualification_certificates = qualificationCert.url;
   if (licenceDoc) counsellor.documents.licence = licenceDoc.url;
-  if (experienceLetter) counsellor.documents.experince_letter = experienceLetter.url;
-  if (additionalDocs) counsellor.documents.additional_documents = additionalDocs.url;
+  if (experienceLetter)
+    counsellor.documents.experince_letter = experienceLetter.url;
+  if (additionalDocs)
+    counsellor.documents.additional_documents = additionalDocs.url;
 
   // Update shared fields in User schema
   const sharedFields = ["fullname", "email", "phone_number", "dob", "gender"];
@@ -229,12 +259,14 @@ export const updateCounsellor = asyncHandler(async (req, res) => {
   await counsellor.save();
   await user.save();
 
-  return res.status(200).json({
-    msg: "Counsellor profile updated successfully",
-    counsellor,
-    user,
-  });
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        counsellor,
+        user,
+      },
+      "Profile updated successfully"
+    )
+  );
 });
-
-
-

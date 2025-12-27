@@ -19,14 +19,13 @@
 import { Router } from "express";
 import { FormController } from "../controllers/index.js";
 
-
 export const FormRouter = Router();
 
 // -------------------------
 // POST  /submit
 // Description: Submit new form
 // -------------------------
-FormRouter.route("/submit").post(FormController);
+FormRouter.route("/submit").post(FormController.FormController);
 //FormRouter.post("/submit",FormController);
 //--------------------------
 
