@@ -11,7 +11,9 @@ import Razorpay from "razorpay";
 // 🗄️ Database Import
 // ===============================================================
 import { connectToDatabase } from "./src/db/db.js";
-
+import { limiter } from "./src/middlewares/rate-limiter.js";
+import { sessionConfig } from "./src/config/session.js";
+import { cacheControl } from "./src/middlewares/cache-control.js";
 // ===============================================================
 // 🚦 Routes Import
 // ===============================================================
@@ -27,6 +29,8 @@ import { analyticsRouter } from "./src/router/Analytics.router.js";
 import { errorHandler } from "./src/middlewares/error-handler.js";
 import { serviceRouter } from "./src/router/services.router.js";
 import { ApiResponse } from "./src/utils/ApiResponse.js";
+import csurf from "csurf";
+import passport from "./src/config/passport-config.js";
 
 // ===============================================================
 // 🚀 Create Express App Instance
@@ -83,8 +87,13 @@ app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.static("/tmp", { index: false }));
 app.use(errorHandler);
-app.set("trust proxy", true);
 app.use(trackAnalytics);
+app.use(limiter);
+// app.use(csurf({ cookie: true }));
+app.use(sessionConfig);
+app.use(cacheControl);
+app.use(passport.initialize());
+app.use(passport.session());
 
 // ===============================================================
 // 🏠 Default Route
@@ -107,6 +116,7 @@ export const instance = new Razorpay({
 // ===============================================================
 
 // app.use("/razorpay",RazorpayRouter);
+app.use("/", userRouter);
 app.use("/api/form", FormRouter);
 app.use("/api/user", userRouter);
 app.use("/api/availability", AvailabilityRouter);
