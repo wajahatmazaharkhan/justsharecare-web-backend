@@ -13,6 +13,7 @@ import {
 import { asyncHandler } from "../utils/async-handler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import passport from "passport";
 
 // signup user controller function //
 export const SignUp = asyncHandler(async (req, res) => {
