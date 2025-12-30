@@ -87,6 +87,7 @@ userRouter.get("/api/current-user", auth, (req, res, next) => {
 userRouter.get("/api/logout", (req, res) => {
   req.session.destroy((err) => {
     if (err) {
+      console.log(err)
       return res
         .status(500)
         .json(new ApiError(500, "could not log out, please try again!"));
