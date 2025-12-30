@@ -76,7 +76,7 @@ userRouter.get("/api/current-user", auth, (req, res, next) => {
     });
 });
 
-userRouter.get("/api/logout", (req, res) => {
+userRouter.post("/logout", (req, res) => {
   req.session.destroy((err) => {
     if (err) {
       return res
@@ -86,7 +86,10 @@ userRouter.get("/api/logout", (req, res) => {
       res.clearCookie("access_token");
       res.clearCookie("refresh_token");
       res.clearCookie("authToken");
-      res.redirect(`${process.env.API_URL}`);
+      // res.redirect(`${process.env.API_URL}`);
+      return res.status(200).json(
+        new ApiResponse(200, null, "Logged out successfully")
+      );
     }
   });
 });
