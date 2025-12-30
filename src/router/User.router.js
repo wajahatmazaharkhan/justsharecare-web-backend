@@ -54,16 +54,8 @@ userRouter.get(
       const token = jwt.sign({ userId: req.user.id }, privateKey, {
         algorithm: "RS256",
       });
-      res.cookie("access_token", token, {
-        httpOnly: true,
-        sameSite: "None",
-        secure: process.env.NODE_ENV === "production",
-      });
-      res.cookie("refresh_token", token, {
-        httpOnly: true,
-        sameSite: "None",
-        secure: process.env.NODE_ENV === "production",
-      });
+      res.cookie("access_token", token, { httpOnly: false });
+      res.cookie("refresh_token", token, { httpOnly: false });
       res.redirect(`${process.env.API_URL}`);
     } catch (error) {
       console.error(error);
@@ -87,7 +79,6 @@ userRouter.get("/api/current-user", auth, (req, res, next) => {
 userRouter.get("/api/logout", (req, res) => {
   req.session.destroy((err) => {
     if (err) {
-      console.log(err)
       return res
         .status(500)
         .json(new ApiError(500, "could not log out, please try again!"));
@@ -95,7 +86,7 @@ userRouter.get("/api/logout", (req, res) => {
       res.clearCookie("access_token");
       res.clearCookie("refresh_token");
       res.clearCookie("authToken");
-      return res.status(200).json({ message: "Logged out" });
+      res.redirect(`${process.env.API_URL}`);
     }
   });
 });
