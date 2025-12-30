@@ -43,6 +43,8 @@ userRouter.get(
   })
 );
 
+const isProd = process.env.NODE_ENV === "production";
+
 userRouter.get(
   "/auth/google/callback",
   passport.authenticate("google", { failureRedirect: "/login" }),
@@ -55,8 +57,16 @@ userRouter.get(
       const token = jwt.sign({ userId: req.user.id }, privateKey, {
         algorithm: "RS256",
       });
-      res.cookie("access_token", token, { httpOnly: false });
-      res.cookie("refresh_token", token, { httpOnly: false });
+      res.cookie("access_token", token, {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: isProd ? "None" : "Lax",
+      });
+      res.cookie("refresh_token", token, {
+        httpOnly: false,
+        secure: isProd,
+        sameSite: isProd ? "None" : "Lax",
+      });
       res.redirect(`${process.env.API_URL}`);
     } catch (error) {
       console.error(error);
