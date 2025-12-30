@@ -134,7 +134,7 @@ export const amdinLogin = asyncHandler(async (req, res) => {
   // cookie option
   const option = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: true,
     // secure: false, // Set to true if using HTTPS
   };
 
