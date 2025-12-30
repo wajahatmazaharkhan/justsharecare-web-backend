@@ -90,7 +90,7 @@ app.use(errorHandler);
 app.use(trackAnalytics);
 app.use(limiter);
 // app.use(csurf({ cookie: true }));
-app.set("trust proxy",1);
+app.set("trust proxy", 1);
 app.use(sessionConfig);
 app.use(cacheControl);
 app.use(passport.initialize());
