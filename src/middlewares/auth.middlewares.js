@@ -10,46 +10,93 @@ import { dirname } from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const auth = (req, res, next) => {
-  const { access_token, refresh_token, authToken } = req.cookies;
+const auth = async (req, res, next) => {
+  const token = req.cookies.authToken;
+  if (!token) {
+    return res.status(401).json(new ApiError(401, "No Token Provided"));
+  }
 
   try {
-    // 1️⃣ TRY GOOGLE AUTH FIRST (but don't fail hard)
-    if (access_token && refresh_token) {
-      try {
-        const publicKey = fs.readFileSync(
-          path.join(__dirname, "../public.key"),
-          "utf-8"
-        );
-
-        const decoded = jwt.verify(access_token, publicKey, {
-          algorithms: ["RS256"],
-        });
-
-        req.user = decoded.userId;
-        return next();
-      } catch (err) {
-        // IMPORTANT: swallow Google failure and FALL THROUGH
-        console.warn("Google token invalid, falling back");
-      }
-    }
-
-    //  FALLBACK: normal email/password auth
-    if (!authToken) {
-      return res
-        .status(401)
-        .json(new ApiError(401, "Unauthorized: No valid token"));
-    }
-
-    const decoded = jwt.verify(authToken, process.env.JWT_SECRET_KEY);
-    req.user = decoded.userId;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    req.user = decoded;
     next();
   } catch (err) {
-    return res.status(401).json(new ApiError(401, "Invalid or expired token"));
+    return res.status(401).json(new ApiError(401, "Invalid Token Provided"));
   }
 };
 
 export default auth;
+
+export const googleJwtMiddleware = (req, res, next) => {
+  const accessToken = req.cookies.access_token;
+  const refreshToken = req.cookies.refresh_token;
+
+  try {
+    const publicKey = fs.readFileSync(
+      path.join(__dirname, "../public.key"),
+      "utf8"
+    );
+
+    if (accessToken && refreshToken) {
+      jwt.verify(
+        accessToken,
+        publicKey,
+        { algorithms: ["RS256"] },
+        (err, decoded) => {
+          if (err) {
+            if (err.name === "TokenExpiredError") {
+              // The access token is expired. Try to refresh it.
+              jwt.verify(
+                refreshToken,
+                publicKey,
+                { algorithms: ["RS256"] },
+                (err, decoded) => {
+                  if (err) {
+                    // The refresh token is also invalid or expired. The user needs to log in again.
+                    // res.status(401).send("Unauthorized: Invalid token");
+                    auth(req, res, next);
+                  } else {
+                    // The refresh token is valid. Generate a new access token and continue.
+                    const privateKey = fs.readFileSync(
+                      path.join(__dirname, "../private.key"),
+                      "utf8"
+                    );
+                    const newAccessToken = jwt.sign(
+                      { userId: decoded.userId },
+                      privateKey,
+                      { algorithm: "RS256" }
+                    );
+                    res.cookie("access_token", newAccessToken, {
+                      httpOnly: true,
+                    });
+                    req.user = decoded.userId;
+                    next();
+                  }
+                }
+              );
+            } else {
+              // The access token is invalid for a reason other than expiration.
+              console.error(err);
+              auth(req, res, next);
+              // res.status(401).send("Unauthorized: Invalid token");
+            }
+          } else {
+            // The access token is valid. Continue.
+            req.user = decoded.userId;
+            next();
+          }
+        }
+      );
+    } else {
+      // res.status(401).send("Unauthorized: No token provided");
+      auth(req, res, next);
+    }
+  } catch (err) {
+    console.error("Error reading key files:", err);
+    // res.status(500).send("Internal Server Error");
+    auth(req, res, next);
+  }
+};
 
 // only admin middleware
 export const adminVerify = asyncHandler(async (req, res, next) => {

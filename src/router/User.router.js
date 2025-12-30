@@ -7,6 +7,7 @@ import { UserController } from "../controllers/index.js";
 import auth, {
   adminVerify,
   counsellorVerify,
+  googleJwtMiddleware,
 } from "../middlewares/auth.middlewares.js";
 import passport from "../config/passport-config.js";
 import jwt from "jsonwebtoken";
@@ -64,14 +65,14 @@ userRouter.get(
   }
 );
 
-userRouter.get("/current-user", auth, (req, res, next) => {
+userRouter.get("/current-user", googleJwtMiddleware, (req, res, next) => {
   User.findById(req.user)
     .then((user) => {
       // res.cookie("XSRF-TOKEN", req.csrfToken());
       res.status(200).json(new ApiResponse(200, user, "authenticated"));
     })
     .catch((err) => {
-      console.error(err);
+      console.log("err", err);
       next(err);
     });
 });
@@ -87,9 +88,9 @@ userRouter.post("/logout", (req, res) => {
       res.clearCookie("refresh_token");
       res.clearCookie("authToken");
       // res.redirect(`${process.env.API_URL}`);
-      return res.status(200).json(
-        new ApiResponse(200, null, "Logged out successfully")
-      );
+      return res
+        .status(200)
+        .json(new ApiResponse(200, null, "Logged out successfully"));
     }
   });
 });
