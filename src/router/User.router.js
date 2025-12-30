@@ -56,7 +56,7 @@ userRouter.get(
       });
       res.cookie("access_token", token, { httpOnly: true });
       res.cookie("refresh_token", token, { httpOnly: true });
-      res.redirect("http://localhost:8080");
+      res.redirect(`${process.env.API_URL}`);
     } catch (error) {
       console.error(error);
       next(error);
