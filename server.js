@@ -119,7 +119,7 @@ export const instance = new Razorpay({
 // app.use("/razorpay",RazorpayRouter);
 app.use("/", userRouter);
 app.use("/api/form", FormRouter);
-app.use("/api/user", userRouter);
+app.use("/", userRouter);
 app.use("/api/availability", AvailabilityRouter);
 app.use("/api/counsellor", counsellorRouter);
 app.use("/api/appointments", AppointmentRouter);

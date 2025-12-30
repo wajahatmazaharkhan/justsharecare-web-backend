@@ -76,7 +76,7 @@ userRouter.get("/api/current-user", auth, (req, res, next) => {
     });
 });
 
-userRouter.post("/logout", (req, res) => {
+userRouter.post("/api/logout", (req, res) => {
   req.session.destroy((err) => {
     if (err) {
       return res
