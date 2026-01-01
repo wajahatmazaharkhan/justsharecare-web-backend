@@ -270,3 +270,19 @@ export const updateCounsellor = asyncHandler(async (req, res) => {
     )
   );
 });
+
+export const getCounsellorBySlug = asyncHandler(async (req,res) => {
+   const {slug} = req.params ;
+
+   if(!slug) {
+    return res.status(400).json({ msg : "slug not found"})
+   }
+
+   const counsellors = await Counsellor.find({slug}).select("fullname counselling_type documents.profile_picture");
+
+   if(!counsellors){
+     return res.status(400).json({ msg :"counsellors not found"})
+   }
+
+   return res.status(200).json({ msg : "counsellor found" , counsellors})
+})

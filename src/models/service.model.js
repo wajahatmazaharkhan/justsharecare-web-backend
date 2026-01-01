@@ -11,12 +11,12 @@ const ServiseSchema = new mongoose.Schema({
     },
     slug : {
         type : String ,
-    //     enum: [
-    //     "mental-health",
-    //     "wellness-therapy",
-    //     "sexual-health",
-    //     "womens-health",
-    //   ],
+        enum: [
+        "mental-health",
+        "wellness-therapy",
+        "sexual-health",
+        "womens-health",
+      ],
         required : true
     }
 

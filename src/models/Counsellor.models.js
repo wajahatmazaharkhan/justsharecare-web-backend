@@ -128,6 +128,16 @@ const counsellorSchema = new mongoose.Schema({
     enum: ["active", "inactive", "banned"],
     default: "active"
   },
+  slug: {
+    type: String,
+    enum: [
+      "mental-health",
+      "wellness-therapy",
+      "sexual-health",
+      "womens-health",
+    ],
+    default : "mental-health"
+  },
   history: [
     {
       customerId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },

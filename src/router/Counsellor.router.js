@@ -38,3 +38,5 @@ counsellorRouter.put(
   ]),
   CounsellorController.updateCounsellor
 );
+
+counsellorRouter.get("/getcounsellorbyslug/:slug",CounsellorController.getCounsellorBySlug);
