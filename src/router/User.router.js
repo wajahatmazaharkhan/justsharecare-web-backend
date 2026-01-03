@@ -7,6 +7,7 @@ import { UserController } from "../controllers/index.js";
 import auth, {
   adminVerify,
   counsellorVerify,
+  dynamicAuth,
   googleJwtMiddleware,
 } from "../middlewares/auth.middlewares.js";
 import passport from "../config/passport-config.js";
@@ -75,7 +76,7 @@ userRouter.get(
   }
 );
 
-userRouter.get("/current-user", googleJwtMiddleware, (req, res, next) => {
+userRouter.get("/current-user", dynamicAuth, (req, res, next) => {
   User.findById(req.user)
     .then((user) => {
       // res.cookie("XSRF-TOKEN", req.csrfToken());
@@ -113,7 +114,7 @@ userRouter.post("/logout", (req, res) => {
   });
 });
 
-userRouter.get("/info", auth, UserController.getUserInfo);
+userRouter.get("/info", dynamicAuth, UserController.getUserInfo);
 userRouter.post("/adminlogin", UserController.amdinLogin);
 userRouter.post("/otp-for-password/:email", UserController.sendEmailOtp);
 userRouter.post("/verify-otp", UserController.VerifyOtp);

@@ -47,6 +47,10 @@ import { Message } from "./src/models/message.models.js";
 import { decryptText } from "./src/security/aes-encryption.js";
 import { User } from "./src/models/User.models.js";
 import { AdminRouter } from "./src/router/Admin.router.js";
+import {
+  adminVerify,
+  dynamicAuth,
+} from "./src/middlewares/auth.middlewares.js";
 
 // ===============================================================
 // 🔧 Environment Variables
@@ -144,11 +148,11 @@ app.use("/api/availability", AvailabilityRouter);
 app.use("/api/counsellor", counsellorRouter);
 app.use("/api/appointments", AppointmentRouter);
 app.use("/analytics", analyticsRouter);
-app.use("/api/service", serviceRouter);
-app.use("/api/chat", chatRouter);
-app.use("/api/message", messageRouter);
-app.use("/api/admin", AdminRouter);
-
+app.use("/api/service", dynamicAuth, serviceRouter);
+app.use("/api/chat", dynamicAuth, chatRouter);
+app.use("/api/message", dynamicAuth, messageRouter);
+app.use("/api/admin", adminVerify, AdminRouter);
+app.use("/api", dynamicAuth, RazorpayRouter);
 // ===============================================================
 // 🔗 Socket.IO Logic
 // ===============================================================

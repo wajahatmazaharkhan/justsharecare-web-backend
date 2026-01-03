@@ -53,8 +53,7 @@ export const googleJwtMiddleware = (req, res, next) => {
                 (err, decoded) => {
                   if (err) {
                     // The refresh token is also invalid or expired. The user needs to log in again.
-                    // res.status(401).send("Unauthorized: Invalid token");
-                    auth(req, res, next);
+                    res.status(401).send("Unauthorized: Invalid token");
                   } else {
                     // The refresh token is valid. Generate a new access token and continue.
                     const privateKey = fs.readFileSync(
@@ -77,8 +76,7 @@ export const googleJwtMiddleware = (req, res, next) => {
             } else {
               // The access token is invalid for a reason other than expiration.
               console.error(err);
-              auth(req, res, next);
-              // res.status(401).send("Unauthorized: Invalid token");
+              res.status(401).send("Unauthorized: Invalid token");
             }
           } else {
             // The access token is valid. Continue.
@@ -88,13 +86,31 @@ export const googleJwtMiddleware = (req, res, next) => {
         }
       );
     } else {
-      // res.status(401).send("Unauthorized: No token provided");
-      auth(req, res, next);
+      res.status(401).send("Unauthorized: No token provided");
     }
   } catch (err) {
     console.error("Error reading key files:", err);
     res.status(500).send("Internal Server Error");
-    // auth(req, res, next);
+  }
+};
+
+export const dynamicAuth = async (req, res, next) => {
+  // Async handler not required as there is no await
+  try {
+    // Check if authenticated with google
+    if (req.cookies.access_token && req.cookies.refresh_token) {
+      return googleJwtMiddleware(req, res, next);
+    }
+    // Check if authenticated with email and password
+    if (req.cookies.authToken) {
+      return auth(req, res, next);
+    }
+    // Not authenticated if either of above is not present
+    return res.status(401).json(new ApiError(401, "Authentication Required"));
+  } catch (error) {
+    return res
+      .status(500)
+      .json(new ApiError(500, "Authentication Failure", error));
   }
 };
 

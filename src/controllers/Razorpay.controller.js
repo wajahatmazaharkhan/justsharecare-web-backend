@@ -22,6 +22,7 @@ import { instance } from "../../server.js";
 import { OrderValidation } from "../validator/Razorpay.validation.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { asyncHandler } from "../utils/async-handler.js";
 
 export const createRazorpayOrder = async (req, res) => {
   let options;
@@ -32,14 +33,14 @@ export const createRazorpayOrder = async (req, res) => {
       console.error("Validation Failed!", error.message);
       return res
         .status(400)
-        .json(new ApiError(404, "Validation failure", error.errors));
+        .json(new ApiError(400, "Validation failure", error.errors));
     } else {
       console.error("An unexpected error occurred during validation:", error);
       return res.status(500).json(new ApiError(500, "Internal Server Error"));
     }
   }
   if (!options.currency || !options.amount) {
-    return res.status(404).json(new ApiError(404, "all fields are required"));
+    return res.status(400).json(new ApiError(400, "all fields are required"));
   }
   const order = await instance.orders.create(options);
   console.log("Order created", order);
@@ -47,3 +48,9 @@ export const createRazorpayOrder = async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, order, "order created successfully"));
 };
+
+export const getRazorpayKeys = asyncHandler(async (req, res) => {
+  return res
+    .status(200)
+    .json(new ApiResponse(200, process.env.RAZORPAY_KEY_ID));
+});

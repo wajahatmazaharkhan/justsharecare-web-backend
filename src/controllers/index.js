@@ -6,6 +6,7 @@ export * as CounsellorController from "./Counsellor.controllers.js";
 export * as ServiceController from "./service.controllers.js";
 export * as AppointmentController from "./Appointment.controller.js";
 export * as AnalyticsController from "./adminAnalytics.controller.js";
-export * as ChatController from "./chat.controller.js"
-export * as MessageController from "./message.controller.js"
-export * as AdminController from "./Admin.controller.js"
+export * as ChatController from "./chat.controller.js";
+export * as MessageController from "./message.controller.js";
+export * as AdminController from "./Admin.controller.js";
+export * as RazorpayController from "./Razorpay.controller.js";
