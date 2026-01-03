@@ -278,7 +278,7 @@ export const getCounsellorBySlug = asyncHandler(async (req,res) => {
     return res.status(400).json({ msg : "slug not found"})
    }
 
-   const counsellors = await Counsellor.find({slug}).select("fullname counselling_type documents.profile_picture");
+   const counsellors = await Counsellor.find({slug}).select("fullname email counselling_type documents.profile_picture");
 
    if(!counsellors){
      return res.status(400).json({ msg :"counsellors not found"})
