@@ -23,6 +23,8 @@ import { OrderValidation } from "../validator/Razorpay.validation.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/async-handler.js";
+import { Payment } from "../models/Payment.model.js";
+import crypto from "crypto";
 
 export const createRazorpayOrder = async (req, res) => {
   let options;
@@ -54,3 +56,40 @@ export const getRazorpayKeys = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, process.env.RAZORPAY_KEY_ID));
 });
+
+export const paymentVerification = async (req, res) => {
+  // Avoiding Async-handler because inner try-catch block is required.
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
+    req.body;
+  console.log(req.body);
+  console.log("// --- CHECKING PAYMENT STATUS --- //");
+  const body = razorpay_order_id + "|" + razorpay_payment_id;
+  try {
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(body.toString())
+      .digest("hex");
+
+    const isSignatureValid = expectedSignature === razorpay_signature;
+    if (!isSignatureValid) {
+      console.log("PAYMENT VERIFICATION FAILED INVALID SIGNATURE");
+      return res
+        .status(400)
+        .json(new ApiError(400, "Invalid Payment Signature"));
+    }
+    console.log("PAYMENT VERIFIED SUCCESSFULLY");
+    await Payment.create({
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+    });
+    return res
+      .status(200)
+      .json(new ApiResponse(200, null, "Payment Verified Successfully"));
+  } catch (error) {
+    console.error("Payment verification error:", error);
+    return res
+      .status(500)
+      .json(new ApiError(500, "Payment verification failed"));
+  }
+};
