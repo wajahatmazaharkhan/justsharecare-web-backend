@@ -32,6 +32,11 @@ const NotificationSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    type: {
+      type: String,
+      enum: ["system", "meeting", "chat", "booking", "payment", "reminder"],
+      default: "system",
+    },
 
     meta: {
       type: mongoose.Schema.Types.Mixed, // flexible JSON
