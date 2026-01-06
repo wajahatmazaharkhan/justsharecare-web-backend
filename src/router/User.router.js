@@ -61,12 +61,12 @@ userRouter.get(
       res.cookie("access_token", token, {
         httpOnly: true,
         secure: isProd,
-        sameSite: isProd ? "None" : "Lax",
+        sameSite: "Lax",
       });
       res.cookie("refresh_token", token, {
         httpOnly: false,
         secure: isProd,
-        sameSite: isProd ? "None" : "Lax",
+        sameSite: "Lax",
       });
       res.redirect(`${process.env.API_URL}`);
     } catch (error) {
