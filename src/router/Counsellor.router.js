@@ -20,6 +20,8 @@ counsellorRouter.post(
 
 counsellorRouter.post("/login", CounsellorController.CounsellorLogin);
 counsellorRouter.get("/getcounsellor", CounsellorController.getallCounsellor);
+counsellorRouter.get("/getrandomcounsellor", CounsellorController.getRandomCounsellors);
+
 counsellorRouter.get(
   "/getcounsellorbyemail/:email",
   CounsellorController.getCounsellorByEmail

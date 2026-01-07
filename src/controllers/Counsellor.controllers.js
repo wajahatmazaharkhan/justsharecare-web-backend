@@ -176,6 +176,35 @@ export const getallCounsellor = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, counsellor, "All counsellors fetched"));
 });
 
+export const getRandomCounsellors = asyncHandler(async (req, res) => {
+  const counsellors = await Counsellor.aggregate([
+    {
+      $match: { Admin_approved: true }
+    },
+    {
+      $sample: { size: 3 }
+    },
+    {
+      $project: {
+        documents: 0,
+        history: 0,
+        Admin_approved: 0,
+      }
+    }
+  ]);
+
+  if (!counsellors.length) {
+    return res
+      .status(404)
+      .json(new ApiError(404, "No counsellors found"));
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, counsellors, "Random counsellors fetched"));
+});
+
+
 export const getCounsellorByEmail = asyncHandler(async (req, res) => {
   const { email } = req.params;
 
