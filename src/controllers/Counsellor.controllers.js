@@ -178,15 +178,13 @@ export const getallCounsellor = asyncHandler(async (req, res) => {
 
 export const getRandomCounsellors = asyncHandler(async (req, res) => {
   const counsellors = await Counsellor.aggregate([
-    {
-      $match: { Admin_approved: true }
-    },
+   
     {
       $sample: { size: 3 }
     },
     {
       $project: {
-        documents: 0,
+        
         history: 0,
         Admin_approved: 0,
       }
