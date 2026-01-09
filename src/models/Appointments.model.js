@@ -52,10 +52,19 @@ const appointmentsSchema = new mongoose.Schema(
     notes: {
       type: String,
     },
+
     is_deleted: {
       type: Boolean,
       default: false,
       select: false,
+    },
+
+    // ===========================================================
+    // ⏰ Appointment reminder flag
+    // ===========================================================
+    reminderSent: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }

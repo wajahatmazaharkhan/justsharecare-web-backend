@@ -96,6 +96,7 @@ export const createAppointment = asyncHandler(async (req, res) => {
     session_type,
     price,
     notes,
+    reminderSent: false,
   });
 
   res.status(201).json(new ApiResponse(201, appointment));

@@ -9,10 +9,18 @@ import auth, {
 const AppointmentRouter = express.Router();
 
 // create user-books-appointment
-AppointmentRouter.post("/", dynamicAuth, AppointmentController.createAppointment);
+AppointmentRouter.post(
+  "/",
+  dynamicAuth,
+  AppointmentController.createAppointment
+);
 
 // read
-AppointmentRouter.get("/user", dynamicAuth, AppointmentController.getUserAppointments);
+AppointmentRouter.get(
+  "/user",
+  dynamicAuth,
+  AppointmentController.getUserAppointments
+);
 AppointmentRouter.get(
   "/counsellor",
   dynamicAuth,
@@ -23,7 +31,11 @@ AppointmentRouter.get(
 // AppointmentRouter.get("/:id", AppointmentController.getAppointmentById);
 
 // update
-AppointmentRouter.patch("/:id", dynamicAuth, AppointmentController.updateAppointment);
+AppointmentRouter.patch(
+  "/:id",
+  dynamicAuth,
+  AppointmentController.updateAppointment
+);
 AppointmentRouter.patch(
   "/:id/status",
   dynamicAuth,
@@ -31,6 +43,10 @@ AppointmentRouter.patch(
 );
 
 // delete
-AppointmentRouter.delete("/:id", dynamicAuth, AppointmentController.deleteAppointment);
+AppointmentRouter.delete(
+  "/:id",
+  dynamicAuth,
+  AppointmentController.deleteAppointment
+);
 
 export { AppointmentRouter };
