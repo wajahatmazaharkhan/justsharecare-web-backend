@@ -11,7 +11,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const auth = async (req, res, next) => {
-  const token = req.cookies.authToken;
+  const authHeaders = req.header("Authorization");
+
+  if (!authHeaders || !authHeaders.startsWith("Bearer ")) {
+    return res.status(401).json(new ApiError(401, "No token"));
+  }
+  const token = authHeaders.split(" ")[1];
   if (!token) {
     return res.status(401).json(new ApiError(401, "No Token Provided"));
   }
@@ -28,8 +33,13 @@ const auth = async (req, res, next) => {
 export default auth;
 
 export const googleJwtMiddleware = (req, res, next) => {
-  const accessToken = req.cookies.access_token;
-  const refreshToken = req.cookies.refresh_token;
+  const tokenHeaders = req.header("Authorization");
+
+  if (!tokenHeaders || !tokenHeaders.startsWith("Bearer ")) {
+    return res.status(401).json(new ApiError(401, "No token "));
+  }
+  const accessToken = tokenHeaders.split(" ")[1];
+  const refreshToken = tokenHeaders.split(" ")[1];
 
   try {
     const publicKey = fs.readFileSync(

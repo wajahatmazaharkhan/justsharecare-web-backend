@@ -117,7 +117,7 @@ app.use(cookieParser());
 app.use(express.static("/tmp", { index: false }));
 app.use(errorHandler);
 app.use(trackAnalytics);
-app.use(limiter);
+// app.use(limiter);
 // app.use(csurf({ cookie: true }));
 app.set("trust proxy", 1);
 app.use(sessionConfig);
