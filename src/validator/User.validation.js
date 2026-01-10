@@ -45,3 +45,7 @@ export const AdminLoginValidation = z.object({
   email: z.email(),
   Password: z.string(),
 })
+
+export const UpdateUserStatusValidation = z.object({
+  status: z.enum(["active", "banned"]),
+})
