@@ -102,3 +102,14 @@ export const updateUserRoleById = asyncHandler(async (req, res, next) => {
   await user.save(); // 'user' is the updated document
   return res.status(200).json(new ApiResponse(200, user, "User updated"));
 })
+
+export const deleteUserById = asyncHandler(async (req, res, next) => {
+  const { id } = req.params;
+  const user = await User.findByIdAndDelete(id);
+
+  if (!user) {
+    return res.status(404).json(new ApiError(404, "User not found"));
+  }
+
+  return res.status(200).json(new ApiResponse(200, user, "User deleted"));
+})
