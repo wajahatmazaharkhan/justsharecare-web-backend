@@ -2,7 +2,7 @@
 // ⏰ Appointment Reminder Cron Job
 // ===============================================================
 import cron from "node-cron";
-import { Appointment } from "../models/Appointment.model.js";
+import { Appointment } from "../models/Appointments.model.js";
 import { Notification } from "../models/Notifications.model.js";
 import { sendRealtimeNotification } from "../realtime/sendRealtimeNotification.js";
 import { User } from "../models/User.models.js";

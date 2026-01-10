@@ -1,6 +1,6 @@
 import { PageAnalytics } from "../models/PageAnalytics.model.js";
 import { User } from "../models/User.models.js";
-import { Appointment } from "../models/Appointment.model.js";
+import { Appointment } from "../models/Appointments.model.js";
 import { asyncHandler } from "../utils/async-handler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 

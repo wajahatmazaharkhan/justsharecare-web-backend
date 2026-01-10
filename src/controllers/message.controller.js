@@ -1,12 +1,11 @@
 import { Message } from "../models/message.models.js";
-import { Appointment } from "../models/Appointment.model.js";
+import { Appointment } from "../models/Appointments.model.js";
 import { Conversation } from "../models/conversastion.models.js";
 import { ImagekitFileUploader } from "../services/imagekit.services.js";
 import { asyncHandler } from "../utils/async-handler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { encryptText ,decryptText} from "../security/aes-encryption.js";
-
+import { encryptText, decryptText } from "../security/aes-encryption.js";
 
 export const sendMessage = asyncHandler(async (req, res) => {
   const senderId = req.user.userId;
@@ -27,7 +26,7 @@ export const sendMessage = asyncHandler(async (req, res) => {
   }
 
   // 2️⃣ Check membership
-  if (!conversation.members.some(id => id.equals(senderId))) {
+  if (!conversation.members.some((id) => id.equals(senderId))) {
     throw new ApiError(403, "You are not allowed to send message");
   }
 
@@ -51,12 +50,12 @@ export const sendMessage = asyncHandler(async (req, res) => {
   let attachments = [];
   if (req.files?.length) {
     const uploads = await Promise.all(
-      req.files.map(file => ImagekitFileUploader(file.path))
+      req.files.map((file) => ImagekitFileUploader(file.path))
     );
 
     attachments = uploads
       .filter(Boolean)
-      .map(file => file.url || file.secure_url);
+      .map((file) => file.url || file.secure_url);
   }
 
   // 5️⃣ Encrypt message text
@@ -102,7 +101,7 @@ export const getMessages = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Conversation not found");
   }
 
-  if (!conversation.members.some(id => id.equals(userId))) {
+  if (!conversation.members.some((id) => id.equals(userId))) {
     throw new ApiError(403, "You are not allowed to view messages");
   }
 

@@ -30,7 +30,7 @@ export const CounsellorSignup = asyncHandler(async (req, res) => {
     phone_number: data.contact_number,
     dob: data.dob,
     gender: data.gender,
-    preferred_language: data.preferred_language,
+    preferred_language: data.languages,
     timezone: data.timezone,
     role: "counsellor",
   });
@@ -71,7 +71,7 @@ export const CounsellorSignup = asyncHandler(async (req, res) => {
     counselling_type: data.counselling_type,
     specialties: data.specialties,
     bio: data.bio,
-    qualifications: data.qualifications,
+    // qualifications: data.qualifications,
     years_experience: data.years_experience,
     languages: data.languages,
     hourly_rate: data.hourly_rate,
@@ -83,7 +83,7 @@ export const CounsellorSignup = asyncHandler(async (req, res) => {
     documents: {
       government_id: governmentID?.url,
       profile_picture: profilePicture?.url,
-      qualification_certificates: qualificationCert?.url,
+      qualification_certificates: qualificationCert?.url || null,
       licence: licenceDoc?.url,
       experince_letter: experienceLetter?.url || null,
       additional_documents: additionalDocs?.url || null,
@@ -178,30 +178,25 @@ export const getallCounsellor = asyncHandler(async (req, res) => {
 
 export const getRandomCounsellors = asyncHandler(async (req, res) => {
   const counsellors = await Counsellor.aggregate([
-   
     {
-      $sample: { size: 3 }
+      $sample: { size: 3 },
     },
     {
       $project: {
-        
         history: 0,
         Admin_approved: 0,
-      }
-    }
+      },
+    },
   ]);
 
   if (!counsellors.length) {
-    return res
-      .status(404)
-      .json(new ApiError(404, "No counsellors found"));
+    return res.status(404).json(new ApiError(404, "No counsellors found"));
   }
 
   return res
     .status(200)
     .json(new ApiResponse(200, counsellors, "Random counsellors fetched"));
 });
-
 
 export const getCounsellorByEmail = asyncHandler(async (req, res) => {
   const { email } = req.params;
@@ -298,18 +293,20 @@ export const updateCounsellor = asyncHandler(async (req, res) => {
   );
 });
 
-export const getCounsellorBySlug = asyncHandler(async (req,res) => {
-   const {slug} = req.params ;
+export const getCounsellorBySlug = asyncHandler(async (req, res) => {
+  const { slug } = req.params;
 
-   if(!slug) {
-    return res.status(400).json({ msg : "slug not found"})
-   }
+  if (!slug) {
+    return res.status(400).json({ msg: "slug not found" });
+  }
 
-   const counsellors = await Counsellor.find({slug}).select("fullname email counselling_type documents.profile_picture");
+  const counsellors = await Counsellor.find({ slug }).select(
+    "fullname email counselling_type documents.profile_picture"
+  );
 
-   if(!counsellors){
-     return res.status(400).json({ msg :"counsellors not found"})
-   }
+  if (!counsellors) {
+    return res.status(400).json({ msg: "counsellors not found" });
+  }
 
-   return res.status(200).json({ msg : "counsellor found" , counsellors})
-})
+  return res.status(200).json({ msg: "counsellor found", counsellors });
+});

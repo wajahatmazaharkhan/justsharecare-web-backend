@@ -1,5 +1,5 @@
 import { Conversation } from "../models/conversastion.models.js";
-import { Appointment } from "../models/Appointment.model.js";
+import { Appointment } from "../models/Appointments.model.js";
 import { asyncHandler } from "../utils/async-handler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -37,22 +37,19 @@ export const createConversastion = asyncHandler(async (req, res) => {
     throw new ApiError(403, "Not allowed");
   }
 
-  const members = [
-    appointment.user_id,
-    appointment.counsellor_id
-  ];
+  const members = [appointment.user_id, appointment.counsellor_id];
 
   // ✅ Check existing conversation
   let conversation = await Conversation.findOne({
     isGroup: false,
     sessionId: AppointmentId,
-    members: { $all: members }
+    members: { $all: members },
   });
 
   if (conversation) {
-    return res.status(200).json(
-      new ApiResponse(200, conversation, "Conversation already exists")
-    );
+    return res
+      .status(200)
+      .json(new ApiResponse(200, conversation, "Conversation already exists"));
   }
 
   // ✅ Create conversation
@@ -60,12 +57,12 @@ export const createConversastion = asyncHandler(async (req, res) => {
     members,
     sessionId: AppointmentId,
     isGroup: false,
-    lastMessageAt: new Date()
+    lastMessageAt: new Date(),
   });
 
-  return res.status(201).json(
-    new ApiResponse(201, conversation, "Conversation created")
-  );
+  return res
+    .status(201)
+    .json(new ApiResponse(201, conversation, "Conversation created"));
 });
 
 export const getChat = asyncHandler(async (req, res) => {
@@ -78,7 +75,7 @@ export const getChat = asyncHandler(async (req, res) => {
     .populate("members", "userName Email profileImg")
     .sort({ lastMessageAt: -1 });
 
-  return res.status(200).json(
-    new ApiResponse(200, conversations, "Chats fetched successfully")
-  );
+  return res
+    .status(200)
+    .json(new ApiResponse(200, conversations, "Chats fetched successfully"));
 });
