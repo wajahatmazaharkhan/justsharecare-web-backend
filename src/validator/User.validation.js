@@ -49,3 +49,7 @@ export const AdminLoginValidation = z.object({
 export const UpdateUserStatusValidation = z.object({
   status: z.enum(["active", "banned"]),
 })
+
+export const UpdateUserRoleValidation = z.object({
+  role: z.enum(["user", "counsellor", "admin"]),
+})  

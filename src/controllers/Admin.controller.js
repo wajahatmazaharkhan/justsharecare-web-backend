@@ -2,7 +2,7 @@ import { User } from "../models/User.models.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/async-handler.js";
-import { UpdateUserStatusValidation } from "../validator/User.validation.js";
+import { UpdateUserRoleValidation, UpdateUserStatusValidation } from "../validator/User.validation.js";
 
 export const getAllUsers = asyncHandler(async (req, res, next) => {
   const {
@@ -76,12 +76,29 @@ export const updateUserStatusById = asyncHandler(async (req, res, next) => {
   if (!user) {
     return res.status(404).json(new ApiError(404, "User not found"));
   }
-  console.log(status);
-  console.log(user.status);
+
   if (user.status === status) {
     return res.status(200).json(new ApiResponse(200, user, "Status is already " + status));
   }
   user.status = status;
+  await user.save(); // 'user' is the updated document
+  return res.status(200).json(new ApiResponse(200, user, "User updated"));
+})
+
+export const updateUserRoleById = asyncHandler(async (req, res, next) => {
+  const { id } = req.params;
+  console.log(req.body);
+  const { role } = UpdateUserRoleValidation.parse(req.body);
+  const user = await User.findById(id);
+
+  if (!user) {
+    return res.status(404).json(new ApiError(404, "User not found"));
+  }
+
+  if (user.role === role) {
+    return res.status(200).json(new ApiResponse(200, user, "Role is already " + role));
+  }
+  user.role = role;
   await user.save(); // 'user' is the updated document
   return res.status(200).json(new ApiResponse(200, user, "User updated"));
 })
