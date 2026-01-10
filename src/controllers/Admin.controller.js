@@ -2,6 +2,7 @@ import { User } from "../models/User.models.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/async-handler.js";
+import { UpdateUserStatusValidation } from "../validator/User.validation.js";
 
 export const getAllUsers = asyncHandler(async (req, res, next) => {
   const {
@@ -70,11 +71,17 @@ export const getUserById = asyncHandler(async (req, res, next) => {
 export const updateUserStatusById = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
   const { status } = UpdateUserStatusValidation.parse(req.body);
+  const user = await User.findById(id);
 
-  const user = await User.findByIdAndUpdate(id, { status }, { new: true });
-
-  if (!user)
-    return res.status(404).json(new ApiError(404, "User not found", null, null));
-
+  if (!user) {
+    return res.status(404).json(new ApiError(404, "User not found"));
+  }
+  console.log(status);
+  console.log(user.status);
+  if (user.status === status) {
+    return res.status(200).json(new ApiResponse(200, user, "Status is already " + status));
+  }
+  user.status = status;
+  await user.save(); // 'user' is the updated document
   return res.status(200).json(new ApiResponse(200, user, "User updated"));
 })
