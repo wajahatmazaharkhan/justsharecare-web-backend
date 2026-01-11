@@ -1,6 +1,6 @@
 import express from "express";
 import { AppointmentController } from "../controllers/index.js";
-import auth, {
+import {
   adminVerify,
   counsellorVerify,
   dynamicAuth,

@@ -157,11 +157,11 @@ app.use("/api/availability", AvailabilityRouter);
 app.use("/api/counsellor", counsellorRouter);
 app.use("/api/appointments", AppointmentRouter);
 app.use("/analytics", analyticsRouter);
-app.use("/api/service", dynamicAuth, serviceRouter);
-app.use("/api/chat", dynamicAuth, chatRouter);
-app.use("/api/message", dynamicAuth, messageRouter);
+app.use("/api/service", serviceRouter);
+app.use("/api/chat", chatRouter);
+app.use("/api/message", messageRouter);
 app.use("/api/admin", adminVerify, AdminRouter);
-app.use("/api", dynamicAuth, RazorpayRouter);
+app.use("/api", RazorpayRouter);
 app.use("/api/notifications", notificationRouter);
 
 // ===============================================================

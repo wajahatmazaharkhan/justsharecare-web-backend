@@ -4,11 +4,10 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { UserController } from "../controllers/index.js";
-import auth, {
+import {
   adminVerify,
   counsellorVerify,
   dynamicAuth,
-  googleJwtMiddleware,
 } from "../middlewares/auth.middlewares.js";
 import passport from "../config/passport-config.js";
 import jwt from "jsonwebtoken";
@@ -40,23 +39,7 @@ userRouter.get(
   passport.authenticate("google", { failureRedirect: "/login" }),
   (req, res, next) => {
     try {
-      const privateKey = fs.readFileSync(
-        path.join(__dirname, "../private.key"),
-        "utf8"
-      );
-      const token = jwt.sign({ userId: req.user.id }, privateKey, {
-        algorithm: "RS256",
-      });
-      res.cookie("access_token", token, {
-        httpOnly: true,
-        secure: isProd,
-        sameSite: "Lax",
-      });
-      res.cookie("refresh_token", token, {
-        httpOnly: false,
-        secure: isProd,
-        sameSite: "Lax",
-      });
+      const token = req.user.generateAuthToken();
       res.redirect(
         `${process.env.API_URL}/verify-token/?token=${token}`
       );
@@ -66,18 +49,6 @@ userRouter.get(
     }
   }
 );
-
-userRouter.get("/current-user", dynamicAuth, (req, res, next) => {
-  User.findById(req.user)
-    .then((user) => {
-      // res.cookie("XSRF-TOKEN", req.csrfToken());
-      res.status(200).json(new ApiResponse(200, user, "authenticated"));
-    })
-    .catch((err) => {
-      console.log("err", err);
-      next(err);
-    });
-});
 
 userRouter.post("/logout", (req, res) => {
   const isProd = process.env.NODE_ENV === "production";

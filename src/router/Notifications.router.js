@@ -11,9 +11,8 @@ import {
   sendNotificationToAllCounsellors,
   sendNotificationToAll,
 } from "../controllers/Notifications.controller.js";
-import authMiddleware, {
-  adminVerify,
-} from "../middlewares/auth.middlewares.js";
+import { adminVerify } from "../middlewares/auth.middlewares.js";
+import { dynamicAuth as authMiddleware } from "../middlewares/auth.middlewares.js";
 
 export const notificationRouter = express.Router();
 
