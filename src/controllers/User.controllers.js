@@ -443,7 +443,7 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
     new ApiResponse(200, "Profile updated successfully", updatedUser)
   );
 });
-=======
+
 //Admin only APIs
 
 export const getAllUsers = asyncHandler(async (req, res, next) => {
