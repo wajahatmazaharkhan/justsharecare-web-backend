@@ -14,6 +14,7 @@ import jwt from "jsonwebtoken";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/User.models.js";
+import { upload } from "../middlewares/multer.middlewares.js";
 
 export const userRouter = Router();
 
@@ -85,3 +86,4 @@ userRouter.get("/getHistoryByAdmin", adminVerify, UserController.getHistory);
 userRouter.post("/password-reset-otp", UserController.passwordOtp);
 userRouter.post("/verify-password-otp", UserController.VerifyPasswordResetOtp);
 userRouter.post("/reset-password", UserController.resetPassword);
+userRouter.put("/changeprofile" , dynamicAuth , upload.single("profilePic"),UserController.updateUserProfile)

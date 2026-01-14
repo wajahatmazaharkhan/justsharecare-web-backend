@@ -58,6 +58,17 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    profilePic : {
+      type : String,
+      default : null
+    },
+   history: [
+       {
+         CounsellorId: { type: mongoose.Schema.Types.ObjectId, ref: "Counsellor" },
+         visitDate: { type: Date, default: Date.now },
+         notes: { type: String }, // optional notes about the session
+       }
+     ]
   },
   { timestamps: true }
 );

@@ -13,6 +13,7 @@ import {
 import { asyncHandler } from "../utils/async-handler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { ImagekitFileUploader } from "../services/imagekit.services.js";
 import passport from "passport";
 
 // signup user controller function //
@@ -377,4 +378,65 @@ export const getUserInfo = asyncHandler(async (req, res) => {
   if (!user) return res.status(404).json(new ApiError(404, "No User Found"));
   const userFound = await User.findById(user.userId);
   return res.status(200).json(new ApiResponse(200, userFound, "ok"));
+});
+
+export const updateUserProfile = asyncHandler(async (req, res) => {
+  const userId = req.user.userId;
+
+  const allowedFields = [
+    "fullname",
+    "phone_number",
+    "dob",
+    "gender",
+    "preferred_language",
+    "timezone",
+    "displayName",
+  ];
+
+  const updates = {};
+
+  const body = req.body || {};
+
+  // Debug log to see what's being received
+  console.log("Request body:", body);
+  console.log("Request file:", req.file);
+
+  for (const field of allowedFields) {
+    // Check if field exists and has a valid value
+    const value = body[field];
+    if (value !== undefined && value !== null && value !== '' && value !== 'undefined') {
+      // Trim string values to remove any extra whitespace
+      updates[field] = typeof value === 'string' ? value.trim() : value;
+    }
+  }
+
+  // 🖼️ Image upload (optional)
+  if (req.file?.path) {
+    const uploadResult = await ImagekitFileUploader(req.file.path);
+
+    if (!uploadResult) {
+      throw new ApiError(500, "Image upload failed");
+    }
+
+    updates.profilePic = uploadResult.url;
+  }
+
+  // Allow update even if only one field is changed
+  if (Object.keys(updates).length === 0) {
+    throw new ApiError(400, "No valid fields to update");
+  }
+
+  const updatedUser = await User.findByIdAndUpdate(
+    userId,
+    { $set: updates },
+    { new: true, runValidators: true }
+  ).select("-Password -otp -otpExpiry");
+
+  if (!updatedUser) {
+    throw new ApiError(404, "User not found");
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, "Profile updated successfully", updatedUser)
+  );
 });
