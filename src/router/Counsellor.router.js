@@ -27,6 +27,8 @@ counsellorRouter.get(
   CounsellorController.getCounsellorByEmail
 );
 
+counsellorRouter.get('/get/:id',CounsellorController.getCounsellorById);
+
 counsellorRouter.put(
   "/update",
   counsellorVerify,
