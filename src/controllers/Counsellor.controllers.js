@@ -216,6 +216,22 @@ export const getCounsellorByEmail = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, counsellor, "counsellor found"));
 });
 
+export const getCounsellorById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  if (!id) {
+    return res.status(400).json(new ApiError(401, "counsellor ID is required"));
+  }
+  const counsellor = await Counsellor.findById(id).select("-documents");
+  if (!counsellor) {
+    return res
+      .status(404)
+      .json(new ApiError(404, "No counsellor available with given ID"));
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, counsellor, "counsellor found"));
+});
+
 export const updateCounsellor = asyncHandler(async (req, res) => {
   const userId = req.user._id; // from JWT middleware
 
