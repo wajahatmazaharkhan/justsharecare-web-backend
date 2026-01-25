@@ -222,6 +222,8 @@ export const getCounsellorById = asyncHandler(async (req, res) => {
     return res.status(400).json(new ApiError(401, "counsellor ID is required"));
   }
   const counsellor = await Counsellor.findById(id).select("-documents");
+  const counsellorProfile = await Counsellor.findById(id);
+  const profilePic = counsellorProfile.documents.profile_picture;
   if (!counsellor) {
     return res
       .status(404)
@@ -229,7 +231,7 @@ export const getCounsellorById = asyncHandler(async (req, res) => {
   }
   return res
     .status(200)
-    .json(new ApiResponse(200, counsellor, "counsellor found"));
+    .json(new ApiResponse(200, { counsellor, profilePic }, "counsellor found"));
 });
 
 export const updateCounsellor = asyncHandler(async (req, res) => {

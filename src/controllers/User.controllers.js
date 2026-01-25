@@ -382,7 +382,6 @@ export const getUserInfo = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, userFound, "ok"));
 });
 
-
 export const updateUserProfile = asyncHandler(async (req, res) => {
   const userId = req.user.userId;
 
@@ -407,9 +406,14 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
   for (const field of allowedFields) {
     // Check if field exists and has a valid value
     const value = body[field];
-    if (value !== undefined && value !== null && value !== '' && value !== 'undefined') {
+    if (
+      value !== undefined &&
+      value !== null &&
+      value !== "" &&
+      value !== "undefined"
+    ) {
       // Trim string values to remove any extra whitespace
-      updates[field] = typeof value === 'string' ? value.trim() : value;
+      updates[field] = typeof value === "string" ? value.trim() : value;
     }
   }
 
@@ -439,9 +443,9 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
     throw new ApiError(404, "User not found");
   }
 
-  return res.status(200).json(
-    new ApiResponse(200, "Profile updated successfully", updatedUser)
-  );
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Profile updated successfully", updatedUser));
 });
 
 //Admin only APIs
@@ -504,7 +508,9 @@ export const getUserById = asyncHandler(async (req, res, next) => {
   const user = await User.findById(id);
 
   if (!user)
-    return res.status(404).json(new ApiError(404, "User not found", null, null));
+    return res
+      .status(404)
+      .json(new ApiError(404, "User not found", null, null));
 
   return res.status(200).json(new ApiResponse(200, user, "User found"));
 });
@@ -519,12 +525,14 @@ export const updateUserStatusById = asyncHandler(async (req, res, next) => {
   }
 
   if (user.status === status) {
-    return res.status(200).json(new ApiResponse(200, user, "Status is already " + status));
+    return res
+      .status(200)
+      .json(new ApiResponse(200, user, "Status is already " + status));
   }
   user.status = status;
   await user.save(); // 'user' is the updated document
   return res.status(200).json(new ApiResponse(200, user, "User updated"));
-})
+});
 
 export const updateUserRoleById = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
@@ -537,12 +545,14 @@ export const updateUserRoleById = asyncHandler(async (req, res, next) => {
   }
 
   if (user.role === role) {
-    return res.status(200).json(new ApiResponse(200, user, "Role is already " + role));
+    return res
+      .status(200)
+      .json(new ApiResponse(200, user, "Role is already " + role));
   }
   user.role = role;
   await user.save(); // 'user' is the updated document
   return res.status(200).json(new ApiResponse(200, user, "User updated"));
-})
+});
 
 export const deleteUserById = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
@@ -553,6 +563,15 @@ export const deleteUserById = asyncHandler(async (req, res, next) => {
   }
 
   return res.status(200).json(new ApiResponse(200, user, "User deleted"));
-})
+});
 
+export const allocateCounsellor = asyncHandler(async (req, res, next) => {
+  const { category } = req.body;
+  if (!category) {
+    return res.status(401).json(new ApiError(401, "category is required"));
+  }
 
+  const counsellors = await Counsellor.find();
+
+  return res.status(200).json(new ApiResponse(200, counsellors));
+});

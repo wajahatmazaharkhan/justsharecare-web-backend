@@ -84,6 +84,7 @@ const io = new Server(server, {
 import { initSocket } from "./src/socket/socket.js";
 import { startAppointmentReminderCron } from "./src/scheduler/appointmentReminderCron.js";
 import { sendRealtimeNotification } from "./src/realtime/sendRealtimeNotification.js";
+import { assessmentRouter } from "./src/router/assessment.router.js";
 initSocket(io);
 
 // ===============================================================
@@ -163,6 +164,7 @@ app.use("/api/message", messageRouter);
 app.use("/api/admin", adminVerify, AdminRouter);
 app.use("/api", RazorpayRouter);
 app.use("/api/notifications", notificationRouter);
+app.use("/api/assessment", assessmentRouter);
 
 // ===============================================================
 // 🟢 Connect to DB & Start Server

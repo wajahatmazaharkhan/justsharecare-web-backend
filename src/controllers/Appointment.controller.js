@@ -45,7 +45,7 @@ export const createAppointment = asyncHandler(async (req, res) => {
     notes,
   } = req.body;
 
-  // 1️⃣ Basic validation
+  // Basic validation
   if (!counsellor_id || !scheduled_at || !duration_minutes || !price) {
     return res
       .status(400)
