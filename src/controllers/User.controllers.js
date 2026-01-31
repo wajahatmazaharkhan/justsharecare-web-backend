@@ -17,6 +17,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ImagekitFileUploader } from "../services/imagekit.services.js";
 import passport from "passport";
+import { sendWelcomeEmail } from "../services/WelcomeNewUser.js";
 
 // signup user controller function //
 export const SignUp = asyncHandler(async (req, res) => {
@@ -26,8 +27,6 @@ export const SignUp = asyncHandler(async (req, res) => {
   if (oldUser) {
     return res.status(409).json(new ApiError(409, "User Already Exists"));
   }
-
-  console.log("Password", data.Password);
 
   const newUser = await User.create({
     fullname: data.fullname,
@@ -43,7 +42,7 @@ export const SignUp = asyncHandler(async (req, res) => {
   if (!newUser) {
     return res.status(400).json(new ApiError(400, "User not created"));
   }
-
+  sendWelcomeEmail(newUser.fullname, newUser.email);
   return res.status(201).json(
     new ApiResponse(
       201,
