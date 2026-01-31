@@ -187,6 +187,11 @@ export const getRandomCounsellors = asyncHandler(async (req, res) => {
         
         history: 0,
         Admin_approved: 0,
+        "documents.government_id": 0,
+        "documents.qualification_certificates": 0,
+        "documents.licence": 0,
+        "documents.experince_letter": 0,
+        "documents.additional_documents": 0,
       }
     }
   ]);
