@@ -180,7 +180,7 @@ export const getRandomCounsellors = asyncHandler(async (req, res) => {
   const counsellors = await Counsellor.aggregate([
    
     {
-      $sample: { size: 3 }
+      $sample: { size: 4 }
     },
     {
       $project: {
