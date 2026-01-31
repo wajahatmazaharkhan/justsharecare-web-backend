@@ -104,7 +104,7 @@ export const paymentVerification = async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, null, "Payment Verified Successfully"));
   } catch (error) {
-    console.error("Payment verification error:", error);
+    console.log("Payment verification error:", error);
     // const appointmentExists = Appointment.findByIdAndDelete(appointmentId);
     // if (!appointmentExists) {
     //   return res

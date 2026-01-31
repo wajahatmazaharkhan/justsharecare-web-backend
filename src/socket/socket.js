@@ -7,8 +7,6 @@ import {
 } from "./socketContext.js";
 
 import { User } from "../models/User.models.js";
-import { Message } from "../models/message.models.js";
-import { decryptText } from "../security/aes-encryption.js";
 
 // ===============================================================
 // 🔗 Socket.IO Logic
@@ -39,44 +37,49 @@ export const initSocket = (io) => {
       io.emit("userOnline", userId);
     });
 
-    // Send message event
+    // Join a conversation room
+    socket.on("joinRoom", (conversationId) => {
+      socket.join(conversationId);
+      console.log(`🚪 Socket ${socket.id} joined room: ${conversationId}`);
+    });
+
+    // Send message event - UPDATED
     socket.on("sendMessage", async (data) => {
-      const { conversationId, senderId, receiverId, text, emoji, attachments } =
-        data;
+      const { 
+        conversationId, 
+        senderId, 
+        receiverId, 
+        text, 
+        emoji, 
+        attachments,
+        createdAt 
+      } = data;
 
       try {
         const receiverSocketId = getSocketIdByUser(receiverId);
 
-        // Fetch the latest message from DB (for decryption)
-        const latestMsg = await Message.findOne({
-          conversation: conversationId,
-          sender: senderId,
-        })
-          .sort({ createdAt: -1 })
-          .lean();
-
-        let decryptedText = text;
-
-        if (latestMsg?.key && latestMsg?.text) {
-          try {
-            decryptedText = await decryptText(latestMsg.key, latestMsg.text);
-          } catch (err) {
-            console.error("Decryption failed:", err);
-            decryptedText = "[decryption failed]";
-          }
-        }
+        // Text is already DECRYPTED from backend, just forward it
+        const messageData = {
+          _id: Date.now().toString(),
+          conversationId,
+          senderId,
+          text: text, // Already decrypted
+          emoji,
+          attachments: attachments || [],
+          createdAt: createdAt || new Date().toISOString(),
+        };
 
         // Emit to receiver
         if (receiverSocketId) {
-          io.to(receiverSocketId).emit("getMessage", {
-            conversationId,
-            senderId,
-            text: decryptedText,
-            emoji,
-            attachments,
-            createdAt: new Date(),
-          });
+          io.to(receiverSocketId).emit("getMessage", messageData);
+          io.to(receiverSocketId).emit("receiveMessage", messageData);
+          console.log(`✅ Message delivered to ${receiverId}`);
+        } else {
+          console.log(`⚠️ Receiver ${receiverId} is offline`);
         }
+
+        // Also broadcast to conversation room
+        socket.to(conversationId).emit("receiveMessage", messageData);
       } catch (err) {
         console.error("sendMessage socket error:", err);
       }

@@ -83,9 +83,20 @@ export const sendMessage = asyncHandler(async (req, res) => {
     lastMessageAt: new Date(),
   });
 
+  // 8️⃣ Return decrypted message for immediate display
+  const messageResponse = {
+    _id: message._id,
+    conversation: message.conversation,
+    sender: message.sender,
+    text: text, // Return original text (decrypted) for frontend
+    attachments: message.attachments,
+    emoji: message.emoji,
+    createdAt: message.createdAt,
+  };
+
   return res
     .status(201)
-    .json(new ApiResponse(201, message, "Message sent successfully"));
+    .json(new ApiResponse(201, messageResponse, "Message sent successfully"));
 });
 
 export const getMessages = asyncHandler(async (req, res) => {
@@ -109,17 +120,33 @@ export const getMessages = asyncHandler(async (req, res) => {
     conversation: conversationId,
   }).sort({ createdAt: 1 });
 
+  // Decrypt all messages before sending
+  const decryptedMessages = [];
   for (const msg of messages) {
+    const decryptedMsg = {
+      _id: msg._id,
+      conversation: msg.conversation,
+      sender: msg.sender,
+      text: null,
+      attachments: msg.attachments || [],
+      emoji: msg.emoji,
+      createdAt: msg.createdAt,
+    };
+
+    // Decrypt text if it exists
     if (msg.text && msg.key) {
       try {
-        msg.text = await decryptText(msg.key, msg.text);
-      } catch {
-        msg.text = "[decryption failed]";
+        decryptedMsg.text = await decryptText(msg.key, msg.text);
+      } catch (error) {
+        console.error("Decryption failed for message:", msg._id, error);
+        decryptedMsg.text = "[decryption failed]";
       }
     }
+
+    decryptedMessages.push(decryptedMsg);
   }
 
   return res
     .status(200)
-    .json(new ApiResponse(200, messages, "Messages fetched successfully"));
+    .json(new ApiResponse(200, decryptedMessages, "Messages fetched successfully"));
 });
