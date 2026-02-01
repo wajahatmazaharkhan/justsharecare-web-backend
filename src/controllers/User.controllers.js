@@ -119,7 +119,7 @@ export const Login = asyncHandler(async (req, res) => {
 });
 
 // admin Login controller function //
-export const amdinLogin = asyncHandler(async (req, res) => {
+export const adminLogin = asyncHandler(async (req, res) => {
   const data = AdminLoginValidation.parse(req.body);
   console.log("admin login", data);
   const userExisted = await User.findOne({ email: data.email });
@@ -131,7 +131,7 @@ export const amdinLogin = asyncHandler(async (req, res) => {
     return res.status(402).json(new ApiError(402, "Only Admins can Login"));
   }
 
-  const user = await userExisted.comparePassword(data.password);
+  const user = await userExisted.comparePassword(data.Password);
   if (!user) {
     return res.status(400).json(new ApiError(400, "Invalid Email or Password"));
   }

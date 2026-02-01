@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { upload } from "../middlewares/multer.middlewares.js";
-import { CounsellorController } from "../controllers/index.js";
+import { AdminCounsellor, CounsellorController } from "../controllers/index.js";
 import { counsellorVerify } from "../middlewares/auth.middlewares.js";
 
 export const counsellorRouter = Router();
@@ -25,6 +25,8 @@ counsellorRouter.get(
   CounsellorController.getRandomCounsellors
 );
 
+counsellorRouter.get("/get-all-counsellors", AdminCounsellor.getAllCounsellors);
+counsellorRouter.patch("/approve/:id", AdminCounsellor.approveCounsellor);
 counsellorRouter.get(
   "/getcounsellorbyemail/:email",
   CounsellorController.getCounsellorByEmail
