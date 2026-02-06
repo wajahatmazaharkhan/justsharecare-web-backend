@@ -4,6 +4,7 @@ import { Counsellor } from "../models/Counsellor.models.js";
 import { asyncHandler } from "../utils/async-handler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
+import { sendAppointmentApprovedEmail } from "../services/sendAppointmentApprovedEmail.js";
 import mongoose from "mongoose";
 
 
@@ -350,6 +351,26 @@ export const approveAppointmentByCounsellor = asyncHandler(async (req, res) => {
   appointment.counsellor_approved = true;
 
   await appointment.save();
+
+  try {
+    const user = await User.findById(appointment.user_id.toString());
+    console.log(user);
+
+    const counsellorUser = await Counsellor.findById(
+      appointment.counsellor_id.toString()
+    );
+
+    if (user?.fullname && user?.email && counsellorUser?.fullname) {
+      await sendAppointmentApprovedEmail(
+        user.fullname,
+        user.email,
+        counsellorUser.fullname,
+        appointment.scheduled_at
+      );
+    }
+  } catch (err) {
+    console.error("Email failed but approval succeeded:", err.message);
+  }
 
   res
     .status(200)

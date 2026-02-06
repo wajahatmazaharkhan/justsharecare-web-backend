@@ -101,7 +101,7 @@ userRouter.post("/logout", (req, res) => {
 });
 
 userRouter.get("/info", dynamicAuth, UserController.getUserInfo);
-userRouter.post("/adminlogin", UserController.amdinLogin);
+userRouter.post("/admin/login", UserController.adminLogin);
 userRouter.post("/otp-for-password/:email", UserController.sendEmailOtp);
 userRouter.post("/verify-otp", UserController.VerifyOtp);
 userRouter.get("/getHistory", counsellorVerify, UserController.getHistory);

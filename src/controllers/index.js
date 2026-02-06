@@ -9,3 +9,4 @@ export * as AnalyticsController from "./adminAnalytics.controller.js";
 export * as ChatController from "./chat.controller.js";
 export * as MessageController from "./message.controller.js";
 export * as RazorpayController from "./Razorpay.controller.js";
+export * as AdminCounsellor from "./adminCounsellor.controller.js";

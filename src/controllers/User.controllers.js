@@ -17,6 +17,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ImagekitFileUploader } from "../services/imagekit.services.js";
 import passport from "passport";
+import { sendWelcomeEmail } from "../services/WelcomeNewUser.js";
 
 // signup user controller function //
 export const SignUp = asyncHandler(async (req, res) => {
@@ -26,8 +27,6 @@ export const SignUp = asyncHandler(async (req, res) => {
   if (oldUser) {
     return res.status(409).json(new ApiError(409, "User Already Exists"));
   }
-
-  console.log("Password", data.Password);
 
   const newUser = await User.create({
     fullname: data.fullname,
@@ -43,7 +42,7 @@ export const SignUp = asyncHandler(async (req, res) => {
   if (!newUser) {
     return res.status(400).json(new ApiError(400, "User not created"));
   }
-
+  await sendWelcomeEmail(newUser.fullname, newUser.email);
   return res.status(201).json(
     new ApiResponse(
       201,
@@ -120,8 +119,9 @@ export const Login = asyncHandler(async (req, res) => {
 });
 
 // admin Login controller function //
-export const amdinLogin = asyncHandler(async (req, res) => {
+export const adminLogin = asyncHandler(async (req, res) => {
   const data = AdminLoginValidation.parse(req.body);
+  console.log("admin login", data);
   const userExisted = await User.findOne({ email: data.email });
   if (!userExisted) {
     return res.status(404).json(new ApiError(404, "User Not Found"));
@@ -453,56 +453,9 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
 
 //Admin only APIs
 
-export const getAllUsers = asyncHandler(async (req, res, next) => {
-  const {
-    page = 1,
-    limit = 10,
-    search,
-    role,
-    sortBy = "createdAt",
-    sortType = "desc",
-  } = req.query;
-
-  const query = {};
-
-  if (search) {
-    query.$or = [
-      { fullname: { $regex: search, $options: "i" } },
-      { email: { $regex: search, $options: "i" } },
-    ];
-  }
-
-  if (role) {
-    query.role = role;
-  }
-
-  const skip = (parseInt(page) - 1) * parseInt(limit);
-
-  const users = await User.find(query)
-    .sort({ [sortBy]: sortType === "desc" ? -1 : 1 })
-    .skip(skip)
-    .limit(parseInt(limit));
-
-  const totalUsers = await User.countDocuments(query);
-
-  const totalPages = Math.ceil(totalUsers / parseInt(limit));
-
-  if (!users)
-    return res
-      .status(404)
-      .json(new ApiError(404, "No users found", null, null));
-
-  return res.status(200).json(
-    new ApiResponse(200, {
-      users,
-      pagination: {
-        totalUsers,
-        totalPages,
-        currentPage: parseInt(page),
-        limit: parseInt(limit),
-      },
-    })
-  );
+export const getAllUsers = asyncHandler(async (req, res) => {
+  const users = await User.find().select('-Password -otpExpiry -otp -passwordOtpVerify ')
+  return res.status(200).json(new ApiResponse(200, users, "ok!"));
 });
 
 export const getUserById = asyncHandler(async (req, res, next) => {
