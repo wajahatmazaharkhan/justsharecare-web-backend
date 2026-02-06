@@ -7,6 +7,10 @@ const messageSchema = new mongoose.Schema({
   sessionId: { type: mongoose.Schema.Types.ObjectId, ref: "Session" },
   sender: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   text: String,
+  key: {
+  type: [Number],   // 🔥 IMPORTANT FIX
+  default: null
+},
   attachments: [String],
   emoji: String,
 }, { timestamps: true });

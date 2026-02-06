@@ -119,76 +119,106 @@ export const getMessages = asyncHandler(async (req, res) => {
   const userId = req.user.userId;
   const { conversationId } = req.params;
 
-  console.log('📥 Getting messages - userId:', userId, 'conversationId:', conversationId);
+  console.log("📥 Getting messages - userId:", userId, "conversationId:", conversationId);
 
   if (!conversationId) {
     throw new ApiError(400, "Conversation ID is required");
   }
 
   const conversation = await Conversation.findById(conversationId);
+
   if (!conversation) {
     throw new ApiError(404, "Conversation not found");
   }
 
-  console.log('📋 Conversation members:', conversation.members.map(m => m.toString()));
+  console.log(
+    "📋 Conversation members:",
+    conversation.members.map((m) => m.toString())
+  );
 
-  // ✅ FIXED: Check membership for both User and Counsellor
+  // =====================================================
+  // ✅ MEMBERSHIP CHECK (User OR Counsellor)
+  // =====================================================
   let isMember = false;
 
-  // Check if userId is directly in members (for regular users)
+  // Direct user match
   if (conversation.members.some((id) => id.equals(userId))) {
-    console.log('✅ User found in members (direct match)');
+    console.log("✅ User found in members");
     isMember = true;
   } else {
-    // Check if userId is a counsellor's user_id
-    const counsellor = await Counsellor.findOne({ user_id: userId }).select('_id');
+    // Check if user is counsellor
+    const counsellor = await Counsellor.findOne({ user_id: userId }).select("_id");
+
     if (counsellor) {
-      console.log('🔍 Found counsellor with user_id:', userId, '-> counsellor._id:', counsellor._id.toString());
+      console.log(
+        "🔍 Found counsellor:",
+        counsellor._id.toString()
+      );
+
       if (conversation.members.some((id) => id.equals(counsellor._id))) {
-        console.log('✅ Counsellor found in members');
+        console.log("✅ Counsellor found in members");
         isMember = true;
       }
     }
   }
 
   if (!isMember) {
-    console.log('❌ User/Counsellor not allowed to view messages');
+    console.log("❌ Not allowed to view messages");
     throw new ApiError(403, "You are not allowed to view messages");
   }
 
+  // =====================================================
+  // ✅ FETCH MESSAGES
+  // =====================================================
   const messages = await Message.find({
     conversation: conversationId,
   }).sort({ createdAt: 1 });
 
-  // Decrypt all messages before sending
-  const decryptedMessages = [];
-  for (const msg of messages) {
-    const decryptedMsg = {
-      _id: msg._id,
-      conversation: msg.conversation,
-      sender: msg.sender,
-      text: null,
-      attachments: msg.attachments || [],
-      emoji: msg.emoji,
-      createdAt: msg.createdAt,
-    };
+  // =====================================================
+  // ✅ DECRYPT MESSAGES SAFELY
+  // =====================================================
+  const decryptedMessages = await Promise.all(
+    messages.map(async (msg) => {
+      let finalText = null;
 
-    // Decrypt text if it exists
-    if (msg.text && msg.key) {
-      try {
-        decryptedMsg.text = await decryptText(msg.key, msg.text);
-      } catch (error) {
-        console.error("Decryption failed for message:", msg._id, error);
-        decryptedMsg.text = "[decryption failed]";
+      console.log("🧪 Message Debug:", {
+        id: msg._id,
+        hasText: !!msg.text,
+        hasKey: !!msg.key,
+      });
+
+      // Case 1 → Encrypted message
+      if (msg.text && msg.key) {
+        try {
+          finalText = await decryptText(msg.key, msg.text);
+        } catch (error) {
+          console.error("❌ Decryption failed:", msg._id, error);
+          finalText = "[decryption failed]";
+        }
       }
-    }
 
-    decryptedMessages.push(decryptedMsg);
-  }
+      // Case 2 → Plain text message (fallback)
+      else if (msg.text) {
+        finalText = msg.text;
+      }
 
-  console.log('✅ Messages fetched successfully:', decryptedMessages.length);
+      return {
+        _id: msg._id,
+        conversation: msg.conversation,
+        sender: msg.sender,
+        text: finalText,
+        attachments: msg.attachments || [],
+        emoji: msg.emoji || null,
+        createdAt: msg.createdAt,
+      };
+    })
+  );
+
+  console.log("✅ Messages fetched:", decryptedMessages.length);
 
   return res
     .status(200)
-    .json(new ApiResponse(200, decryptedMessages, "Messages fetched successfully"));
+    .json(
+      new ApiResponse(200, decryptedMessages, "Messages fetched successfully")
+    );
 });
