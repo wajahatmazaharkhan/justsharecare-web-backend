@@ -116,3 +116,8 @@ userRouter.put(
   UserController.updateUserProfile
 );
 userRouter.post("/allocate-counsellor", allocateCounsellor);
+userRouter.get(
+  "/get-user-appointments",
+  dynamicAuth,
+  UserController.getAppointments
+);

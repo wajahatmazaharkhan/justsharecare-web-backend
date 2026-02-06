@@ -18,16 +18,25 @@
 
 import { Router } from "express";
 import { RazorpayController } from "../controllers/index.js";
+import { dynamicAuth } from "../middlewares/auth.middlewares.js";
 
 export const RazorpayRouter = Router();
 
 RazorpayRouter.route("/create-order").post(
+  dynamicAuth,
   RazorpayController.createRazorpayOrder
 );
 RazorpayRouter.route("/get-payment-keys").get(
+  dynamicAuth,
   RazorpayController.getRazorpayKeys
 );
 
 RazorpayRouter.route("/payment-verification").post(
+  dynamicAuth,
   RazorpayController.paymentVerification
+);
+
+RazorpayRouter.route("/payment-refund").post(
+  dynamicAuth,
+  RazorpayController.createRefund
 );

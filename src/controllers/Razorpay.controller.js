@@ -18,7 +18,6 @@
 // ===============================================
 
 import { ZodError } from "zod";
-import { instance } from "../../server.js";
 import { OrderValidation } from "../validator/Razorpay.validation.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -26,6 +25,7 @@ import { asyncHandler } from "../utils/async-handler.js";
 import { Payment } from "../models/Payment.model.js";
 import crypto from "crypto";
 import { Appointment } from "../models/Appointments.model.js";
+import { instance } from "../../server.js";
 
 export const createRazorpayOrder = async (req, res) => {
   let options;
@@ -118,3 +118,58 @@ export const paymentVerification = async (req, res) => {
       .json(new ApiError(500, "Payment verification failed"));
   }
 };
+
+export const createRefund = asyncHandler(async (req, res) => {
+  const { appointmentId } = req.body;
+
+  if (!appointmentId) {
+    return res
+      .status(400)
+      .json(new ApiError(400, "Appointment ID is required."));
+  }
+
+  const payment = await Payment.findOne({
+    appointment_id: appointmentId,
+  }).lean();
+
+  console.log(payment);
+
+  const appointmentFound = await Appointment.findById(appointmentId);
+  console.log("appointmentFound", appointmentFound);
+  if (!appointmentFound || !payment.appointment_id) {
+    return res
+      .status(404)
+      .json(
+        new ApiError(404, "Payment record not found for this appointment.")
+      );
+  }
+
+  // deduct 10% cancellation charge
+  const charge = (appointmentFound.price * 10) / 100;
+  try {
+    const refund = await instance.payments.refund(
+      payment.razorpay_payment_id.toString(),
+      {
+        speed: "normal",
+        amount: Number((appointmentFound.price - charge) * 100),
+        notes: {
+          reason: "Appointment cancelled by user",
+        },
+        receipt: `refund_${appointmentId}`,
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Refund initiated successfully",
+      refund,
+    });
+  } catch (error) {
+    console.error("Refund Error:", error);
+    return res
+      .status(500)
+      .json(
+        new ApiError(500, "Refund failed", error?.error?.description || error)
+      );
+  }
+});
