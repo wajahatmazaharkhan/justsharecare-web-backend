@@ -161,7 +161,7 @@ app.use("/analytics", analyticsRouter);
 app.use("/api/service", serviceRouter);
 app.use("/api/chat", chatRouter);
 app.use("/api/message", messageRouter);
-app.use("/api/admin", adminVerify, AdminRouter);
+app.use("/api/admin", AdminRouter);
 app.use("/api", RazorpayRouter);
 app.use("/api/notifications", notificationRouter);
 app.use("/api/assessment", assessmentRouter);

@@ -18,6 +18,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ImagekitFileUploader } from "../services/imagekit.services.js";
 import passport from "passport";
 import { sendWelcomeEmail } from "../services/WelcomeNewUser.js";
+import { Appointment } from "../models/Appointments.model.js";
 
 // signup user controller function //
 export const SignUp = asyncHandler(async (req, res) => {
@@ -454,7 +455,9 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
 //Admin only APIs
 
 export const getAllUsers = asyncHandler(async (req, res) => {
-  const users = await User.find().select('-Password -otpExpiry -otp -passwordOtpVerify ')
+  const users = await User.find().select(
+    "-Password -otpExpiry -otp -passwordOtpVerify "
+  );
   return res.status(200).json(new ApiResponse(200, users, "ok!"));
 });
 
@@ -530,4 +533,61 @@ export const allocateCounsellor = asyncHandler(async (req, res, next) => {
   const counsellors = await Counsellor.find();
 
   return res.status(200).json(new ApiResponse(200, counsellors));
+});
+
+export const getAppointments = asyncHandler(async (req, res) => {
+  const userId = req.user?.userId || req.user?.user?._id;
+
+  if (!userId) {
+    return res
+      .status(401)
+      .json(new ApiError(401, "Unauthorized: user not found"));
+  }
+
+  const appointments = await Appointment.find({ user_id: userId })
+    .populate({
+      path: "counsellor_id",
+      select:
+        "fullname email counselling_type specialties years_experience languages hourly_rate documents rating",
+    })
+    .sort({ scheduled_at: -1 }) // latest first
+    .lean();
+
+  // Always return array (frontend safe)
+  if (!appointments || appointments.length === 0) {
+    return res
+      .status(200)
+      .json(new ApiResponse(200, [], "No appointments booked"));
+  }
+
+  const enrichedAppointments = appointments.map((apt) => ({
+    _id: apt._id,
+    scheduled_at: apt.scheduled_at,
+    duration_minutes: apt.duration_minutes,
+    session_type: apt.session_type,
+    status: apt.status,
+    price: apt.price,
+    notes: apt.notes || "",
+    payment_status: apt.payment_status,
+    counsellor_approved: apt.counsellor_approved,
+    reminderSent: apt.reminderSent,
+
+    counsellor: apt.counsellor_id
+      ? {
+          id: apt.counsellor_id._id,
+          fullname: apt.counsellor_id.fullname,
+          email: apt.counsellor_id.email,
+          counselling_type: apt.counsellor_id.counselling_type,
+          specialties: apt.counsellor_id.specialties,
+          experience: apt.counsellor_id.years_experience,
+          languages: apt.counsellor_id.languages || [],
+          rating: apt.counsellor_id.rating,
+          profile_picture: apt.counsellor_id.documents?.profile_picture || null,
+        }
+      : null,
+  }));
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, enrichedAppointments, "Appointments fetched"));
 });
