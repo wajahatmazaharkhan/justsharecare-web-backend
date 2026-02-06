@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { upload } from "../middlewares/multer.middlewares.js";
+
 import { AdminCounsellor, CounsellorController } from "../controllers/index.js";
-import { counsellorVerify } from "../middlewares/auth.middlewares.js";
+import { counsellorVerify ,dynamicAuth } from "../middlewares/auth.middlewares.js";
 
 export const counsellorRouter = Router();
 
@@ -52,3 +53,6 @@ counsellorRouter.get(
   "/getcounsellorbyslug/:slug",
   CounsellorController.getCounsellorBySlug
 );
+
+
+counsellorRouter.get("/current", dynamicAuth , CounsellorController.getCurrentCounsellor)
