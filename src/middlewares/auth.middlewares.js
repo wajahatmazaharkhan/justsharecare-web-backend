@@ -63,29 +63,38 @@ export const adminVerify = asyncHandler(async (req, res, next) => {
 
 // only counsellor middleware
 export const counsellorVerify = asyncHandler(async (req, res, next) => {
+
+  const authHeader = req.header("Authorization");
+
   const token =
     req.cookies.authToken ||
-    req.header("Authorization")?.replace("Bearer ", "");
+    (authHeader && authHeader.startsWith("Bearer ")
+      ? authHeader.split(" ")[1]
+      : null);
+
   if (!token) {
-    return res
-      .status(401)
-      .json(new ApiError(401, "Unauthorized: No token provided"));
+    throw new ApiError(401, "Unauthorized: No token provided");
   }
 
   let decoded;
+
   try {
     decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
   } catch (err) {
-    return res.status(401).json(new ApiError(401, "Invalid or expired token"));
+    throw new ApiError(401, "Invalid or expired token");
   }
 
   const user = await User.findById(decoded.userId);
+
   if (!user || user.role !== "counsellor") {
-    return res
-      .status(403)
-      .json(new ApiError(403, "Access Denied: Counsellors only"));
+    throw new ApiError(403, "Access Denied: Counsellors only");
   }
 
-  req.user = user;
+  // ⭐ Standardized user object
+  req.user = {
+    userId: user._id,
+    role: user.role,
+  };
+
   next();
 });
