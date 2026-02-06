@@ -1,6 +1,7 @@
 import { Message } from "../models/message.models.js";
 import { Appointment } from "../models/Appointments.model.js";
 import { Conversation } from "../models/conversastion.models.js";
+import { Counsellor } from "../models/Counsellor.models.js";
 import { ImagekitFileUploader } from "../services/imagekit.services.js";
 import { asyncHandler } from "../utils/async-handler.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -25,8 +26,23 @@ export const sendMessage = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Conversation not found");
   }
 
-  // 2️⃣ Check membership
-  if (!conversation.members.some((id) => id.equals(senderId))) {
+  // 2️⃣ Check membership - FIXED to handle both User and Counsellor
+  let isMember = false;
+
+  // Check if senderId is directly in members (for regular users)
+  if (conversation.members.some((id) => id.equals(senderId))) {
+    isMember = true;
+    console.log('✅ User found in members (direct match)');
+  } else {
+    // Check if senderId is a counsellor's user_id
+    const counsellor = await Counsellor.findOne({ user_id: senderId }).select('_id');
+    if (counsellor && conversation.members.some((id) => id.equals(counsellor._id))) {
+      isMember = true;
+      console.log('✅ Counsellor found in members (via user_id lookup)');
+    }
+  }
+
+  if (!isMember) {
     throw new ApiError(403, "You are not allowed to send message");
   }
 
@@ -103,6 +119,8 @@ export const getMessages = asyncHandler(async (req, res) => {
   const userId = req.user.userId;
   const { conversationId } = req.params;
 
+  console.log('📥 Getting messages - userId:', userId, 'conversationId:', conversationId);
+
   if (!conversationId) {
     throw new ApiError(400, "Conversation ID is required");
   }
@@ -112,7 +130,29 @@ export const getMessages = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Conversation not found");
   }
 
-  if (!conversation.members.some((id) => id.equals(userId))) {
+  console.log('📋 Conversation members:', conversation.members.map(m => m.toString()));
+
+  // ✅ FIXED: Check membership for both User and Counsellor
+  let isMember = false;
+
+  // Check if userId is directly in members (for regular users)
+  if (conversation.members.some((id) => id.equals(userId))) {
+    console.log('✅ User found in members (direct match)');
+    isMember = true;
+  } else {
+    // Check if userId is a counsellor's user_id
+    const counsellor = await Counsellor.findOne({ user_id: userId }).select('_id');
+    if (counsellor) {
+      console.log('🔍 Found counsellor with user_id:', userId, '-> counsellor._id:', counsellor._id.toString());
+      if (conversation.members.some((id) => id.equals(counsellor._id))) {
+        console.log('✅ Counsellor found in members');
+        isMember = true;
+      }
+    }
+  }
+
+  if (!isMember) {
+    console.log('❌ User/Counsellor not allowed to view messages');
     throw new ApiError(403, "You are not allowed to view messages");
   }
 
@@ -145,6 +185,8 @@ export const getMessages = asyncHandler(async (req, res) => {
 
     decryptedMessages.push(decryptedMsg);
   }
+
+  console.log('✅ Messages fetched successfully:', decryptedMessages.length);
 
   return res
     .status(200)

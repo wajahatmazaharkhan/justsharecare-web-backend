@@ -6,6 +6,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import mongoose from "mongoose";
 
+
 // ........Get All Appointments.................
 export const getAllAppointments = asyncHandler(async (req, res) => {
   const appointments = await Appointment.find({ is_deleted: false })
@@ -53,6 +54,15 @@ export const createAppointment = asyncHandler(async (req, res) => {
       .json(new ApiError(400, "Required fields are missing..."));
   }
 
+  const counsellor = await Counsellor
+  .findById(counsellor_id)
+  .select("fullname");
+
+  const user = await User
+  .findById(user_id)
+  .select("fullname");
+
+
   const start = new Date(scheduled_at);
 
   // Prevent past appointments
@@ -93,6 +103,8 @@ export const createAppointment = asyncHandler(async (req, res) => {
     user_id,
     counsellor_id,
     scheduled_at: start,
+    counsellor_name : counsellor.fullname,
+    user_name : user.fullname,
     duration_minutes,
     session_type,
     price,
