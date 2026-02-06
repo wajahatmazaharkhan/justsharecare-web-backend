@@ -31,6 +31,7 @@ import { messageRouter } from "./src/router/message.router.js";
 import { analyticsRouter } from "./src/router/Analytics.router.js";
 import { serviceRouter } from "./src/router/services.router.js";
 import { notificationRouter } from "./src/router/Notifications.router.js";
+import { avRouter } from "./src/router/AvailabilityWeek.js";
 
 // ===============================================================
 // 🧠 Other Imports
@@ -165,6 +166,7 @@ app.use("/api/admin", AdminRouter);
 app.use("/api", RazorpayRouter);
 app.use("/api/notifications", notificationRouter);
 app.use("/api/assessment", assessmentRouter);
+app.use("/api/availability",avRouter);
 
 // ===============================================================
 // 🟢 Connect to DB & Start Server
