@@ -55,4 +55,4 @@ counsellorRouter.get(
 );
 
 
-counsellorRouter.get("/current", dynamicAuth , CounsellorController.getCurrentCounsellor)
+counsellorRouter.get("/current", counsellorVerify , CounsellorController.getCurrentCounsellor)
