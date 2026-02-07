@@ -6,7 +6,12 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { sendAppointmentApprovedEmail } from "../services/sendAppointmentApprovedEmail.js";
 import mongoose from "mongoose";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc.js";
+import timezone from "dayjs/plugin/timezone.js";
 
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 // ........Get All Appointments.................
 export const getAllAppointments = asyncHandler(async (req, res) => {
@@ -55,16 +60,12 @@ export const createAppointment = asyncHandler(async (req, res) => {
       .json(new ApiError(400, "Required fields are missing..."));
   }
 
-  const counsellor = await Counsellor
-  .findById(counsellor_id)
-  .select("fullname");
+  const counsellor =
+    await Counsellor.findById(counsellor_id).select("fullname");
 
-  const user = await User
-  .findById(user_id)
-  .select("fullname");
+  const user = await User.findById(user_id).select("fullname");
 
-
-  const start = new Date(scheduled_at);
+  const start = dayjs.utc(scheduled_at).toDate();
 
   // Prevent past appointments
   if (start < new Date()) {
@@ -104,8 +105,8 @@ export const createAppointment = asyncHandler(async (req, res) => {
     user_id,
     counsellor_id,
     scheduled_at: start,
-    counsellor_name : counsellor.fullname,
-    user_name : user.fullname,
+    counsellor_name: counsellor.fullname,
+    user_name: user.fullname,
     duration_minutes,
     session_type,
     price,
