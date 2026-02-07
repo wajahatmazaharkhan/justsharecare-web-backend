@@ -23,7 +23,6 @@ AppointmentRouter.get(
 );
 AppointmentRouter.get(
   "/counsellor",
-  dynamicAuth,
   counsellorVerify,
   AppointmentController.getCounsellorAppointments
 );

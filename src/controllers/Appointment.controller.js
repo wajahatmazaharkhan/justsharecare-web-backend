@@ -190,7 +190,10 @@ export const getCounsellorAppointments = asyncHandler(async (req, res) => {
   } = req.query;
 
   // Find counsellor document using logged-in user
-  const counsellor = await Counsellor.findOne({ user_id: req.user._id });
+  const counsellor = await Counsellor.findOne({
+  user_id: req.user.userId || req.user.id,
+});
+
 
   if (!counsellor) {
     return res.status(404).json({ message: "Counsellor profile not found" });
