@@ -127,7 +127,7 @@ export const getUserAppointments = asyncHandler(async (req, res) => {
     sort = "asc",
   } = req.query;
 
-  const userId = req.user._id || req.user.userId;
+  const userId =req.user.userId || req.user._id;
 
   const query = {
     user_id: userId,
