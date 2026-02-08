@@ -128,7 +128,7 @@ export const getUserAppointments = asyncHandler(async (req, res) => {
     sort = "asc",
   } = req.query;
 
-  const userId =req.user.userId || req.user._id;
+  const userId = req.user.userId || req.user._id;
 
   const query = {
     user_id: userId,
@@ -192,9 +192,8 @@ export const getCounsellorAppointments = asyncHandler(async (req, res) => {
 
   // Find counsellor document using logged-in user
   const counsellor = await Counsellor.findOne({
-  user_id: req.user.userId || req.user.id,
-});
-
+    user_id: req.user.userId || req.user.id,
+  });
 
   if (!counsellor) {
     return res.status(404).json({ message: "Counsellor profile not found" });
@@ -316,7 +315,7 @@ export const approveAppointmentByCounsellor = asyncHandler(async (req, res) => {
   }
 
   // Step 1: Get counsellor profile from logged-in user
-  const counsellor = await Counsellor.findOne({ user_id: req.user._id });
+  const counsellor = await Counsellor.findOne({ user_id: req.user.userId });
 
   if (!counsellor) {
     return res.status(403).json({ message: "Counsellor profile not found" });
@@ -381,4 +380,76 @@ export const approveAppointmentByCounsellor = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(200, appointment, "Appointment approved successfully")
     );
+});
+
+export const rescheduleAppointment = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { scheduled_at } = req.body;
+
+  if (!scheduled_at) {
+    return res.status(400).json(new ApiError(400, "New date/time required"));
+  }
+
+  // 🌍 Convert same as create controller
+  const newStart = dayjs.utc(scheduled_at).toDate();
+
+  if (newStart < new Date()) {
+    return res
+      .status(400)
+      .json(new ApiError(400, "Cannot reschedule to past time"));
+  }
+
+  const appointment = await Appointment.findOne({
+    _id: id,
+    is_deleted: false,
+  });
+
+  if (!appointment) {
+    return res.status(404).json(new ApiError(404, "Appointment not found"));
+  }
+
+  if (["completed", "cancelled", "no-show"].includes(appointment.status)) {
+    return res
+      .status(400)
+      .json(new ApiError(400, "This appointment cannot be rescheduled"));
+  }
+
+  const duration = appointment.duration_minutes;
+  const newEnd = new Date(newStart.getTime() + duration * 60000);
+
+  // 🔒 Same overlap logic as create
+  const conflict = await Appointment.findOne({
+    counsellor_id: appointment.counsellor_id,
+    status: "scheduled",
+    _id: { $ne: appointment._id },
+    scheduled_at: { $lt: newEnd },
+    $expr: {
+      $gt: [
+        {
+          $add: ["$scheduled_at", { $multiply: ["$duration_minutes", 60000] }],
+        },
+        newStart,
+      ],
+    },
+  });
+
+  if (conflict) {
+    return res
+      .status(409)
+      .json(
+        new ApiError(409, "Counsellor already has another session at that time")
+      );
+  }
+
+  appointment.scheduled_at = newStart;
+  appointment.reminderSent = false; // allow reminder to be re-sent
+
+  await appointment.save();
+
+  res.status(200).json(
+    new ApiResponse(200, {
+      message: "Appointment rescheduled successfully",
+      data: appointment,
+    })
+  );
 });
