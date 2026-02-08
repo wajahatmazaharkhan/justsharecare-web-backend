@@ -19,3 +19,15 @@ AdminRouter.get(
 AdminRouter.get("/get-registered-count", AdminCounsellor.getRegisteredCount);
 AdminRouter.get("/total-appointments", AdminCounsellor.getTotalAppointments);
 AdminRouter.get("/get-revenue-month", AdminCounsellor.getCurrentMonthRevenue);
+
+AdminRouter.get(
+  "/get-canceled-appointments",
+  AdminCounsellor.getCanceledAppointments
+);
+AdminRouter.get(
+  "/get-canceled-appointments-length",
+  AdminCounsellor.getCanceledAppointmentsLength
+);
+AdminRouter.get("/latest-counsellors", AdminCounsellor.getLatestCounsellors);
+AdminRouter.get("/stats/revenue-weekly", AdminCounsellor.getWeeklyRevenue);
+AdminRouter.get("/get-all-appointments", AdminCounsellor.getAllAppointments);
