@@ -31,3 +31,6 @@ AdminRouter.get(
 AdminRouter.get("/latest-counsellors", AdminCounsellor.getLatestCounsellors);
 AdminRouter.get("/stats/revenue-weekly", AdminCounsellor.getWeeklyRevenue);
 AdminRouter.get("/get-all-appointments", AdminCounsellor.getAllAppointments);
+AdminRouter.get("/get-all-assessments", AdminCounsellor.getAllAssessments);
+AdminRouter.get("/payments/all", AdminCounsellor.getAllPayments);
+AdminRouter.get("/all-appointments", AdminCounsellor.getAllAppointmentsAdmin);

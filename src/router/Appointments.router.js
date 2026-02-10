@@ -52,4 +52,11 @@ AppointmentRouter.delete(
   AppointmentController.deleteAppointment
 );
 
+// reschedule appointment
+AppointmentRouter.patch(
+  "/reschedule/:id",
+  counsellorVerify,
+  AppointmentController.rescheduleAppointment
+);
+
 export { AppointmentRouter };

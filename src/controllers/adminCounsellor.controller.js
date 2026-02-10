@@ -1,9 +1,12 @@
 import { Appointment } from "../models/Appointments.model.js";
+import Assessment from "../models/assessment.model.js";
 import { Counsellor } from "../models/Counsellor.models.js";
+import { Payment } from "../models/Payment.model.js";
 import { User } from "../models/User.models.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/async-handler.js";
+import mongoose from "mongoose";
 
 /* ================= GET ALL COUNSELLORS WITH USER ================= */
 export const getAllCounsellors = async (req, res) => {
@@ -261,4 +264,124 @@ export const getAllAppointments = asyncHandler(async (req, res) => {
       .json(new ApiResponse(204, null, "no appointments found"));
   }
   return res.status(200).json(new ApiResponse(200, appointments, "ok"));
+});
+
+export const getAllAssessments = asyncHandler(async (req, res) => {
+  const assessments = await Assessment.find();
+  if (assessments.length === 0) {
+    return res
+      .status(204)
+      .json(new ApiResponse(204, null, "no assessments found"));
+  }
+  return res.status(200).json(new ApiResponse(200, assessments, "ok"));
+});
+
+export const getAllPayments = asyncHandler(async (req, res) => {
+  const payments = await Payment.find().sort({ createdAt: -1 });
+
+  const enriched = await Promise.all(
+    payments.map(async (p) => {
+      if (!mongoose.Types.ObjectId.isValid(p.appointment_id)) return null;
+
+      const appointment = await Appointment.findById(p.appointment_id)
+        .populate("user_id", "fullname email phone_number")
+        .populate("counsellor_id", "fullname email");
+
+      return {
+        payment_id: p._id,
+        razorpay_payment_id: p.razorpay_payment_id,
+        amount: appointment?.price,
+        appointment,
+        createdAt: p.createdAt,
+      };
+    })
+  );
+
+  res.json({
+    success: true,
+    payments: enriched.filter(Boolean),
+  });
+});
+
+export const getAllAppointmentsAdmin = asyncHandler(async (req, res) => {
+  const appointments = await Appointment.aggregate([
+    {
+      $match: { is_deleted: false },
+    },
+
+    // ================= USER JOIN =================
+    {
+      $lookup: {
+        from: "users",
+        localField: "user_id",
+        foreignField: "_id",
+        as: "user",
+      },
+    },
+    { $unwind: "$user" },
+
+    // ================= COUNSELLOR JOIN =================
+    {
+      $lookup: {
+        from: "counsellors",
+        localField: "counsellor_id",
+        foreignField: "_id",
+        as: "counsellor",
+      },
+    },
+    { $unwind: "$counsellor" },
+
+    // ================= FIELD SELECTION =================
+    {
+      $project: {
+        // Appointment fields
+        _id: 1,
+        scheduled_at: 1,
+        duration_minutes: 1,
+        session_type: 1,
+        status: 1,
+        price: 1,
+        payment_status: 1,
+        counsellor_approved: 1,
+        reminderSent: 1,
+        createdAt: 1,
+
+        // User fields (safe)
+        "user._id": 1,
+        "user.fullname": 1,
+        "user.email": 1,
+        "user.phone_number": 1,
+        "user.gender": 1,
+        "user.status": 1,
+        "user.isVerified": 1,
+
+        // Counsellor fields (safe)
+        "counsellor._id": 1,
+        "counsellor.fullname": 1,
+        "counsellor.email": 1,
+        "counsellor.phone_number": 1,
+        "counsellor.counselling_type": 1,
+        "counsellor.specialties": 1,
+        "counsellor.years_experience": 1,
+        "counsellor.languages": 1,
+        "counsellor.rating": 1,
+        "counsellor.hourly_rate": 1,
+        "counsellor.status": 1,
+      },
+    },
+
+    { $sort: { scheduled_at: -1 } },
+  ]);
+
+  if (!appointments.length) {
+    return res
+      .status(204)
+      .json(new ApiResponse(204, null, "No appointments found"));
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, appointments, "Appointments fetched successfully")
+    );
 });
