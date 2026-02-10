@@ -29,7 +29,6 @@ AppointmentRouter.get(
 
 AppointmentRouter.patch(
   "/:appointmentId/approve",
-  dynamicAuth,
   counsellorVerify,
   AppointmentController.approveAppointmentByCounsellor
 );
