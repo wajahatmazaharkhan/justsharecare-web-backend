@@ -53,29 +53,47 @@ export const createAppointment = asyncHandler(async (req, res) => {
     notes,
   } = req.body;
 
-  // Basic validation
+  // Validation
   if (!counsellor_id || !scheduled_at || !duration_minutes || !price) {
     return res
       .status(400)
-      .json(new ApiError(400, "Required fields are missing..."));
+      .json(new ApiError(400, "Required fields are missing"));
   }
 
-  const counsellor =
-    await Counsellor.findById(counsellor_id).select("fullname");
+  if (duration_minutes <= 0 || price <= 0) {
+    return res
+      .status(400)
+      .json(new ApiError(400, "Invalid duration or price"));
+  }
 
-  const user = await User.findById(user_id).select("fullname");
+  const counsellor = await Counsellor.findById(counsellor_id)
+    .select("fullname documents.profile_picture");
+
+  if (!counsellor) {
+    return res.status(404).json(new ApiError(404, "Counsellor not found"));
+  }
+
+  const user = await User.findById(user_id)
+    .select("fullname profilePic");
+
+  if (!user) {
+    return res.status(404).json(new ApiError(404, "User not found"));
+  }
+
+  console.log("Counsellor Pic:", counsellor.documents?.profile_picture);
+console.log("User Pic:", user.profilePic);
+
 
   const start = dayjs.utc(scheduled_at).toDate();
 
-  // Prevent past appointments
   if (start < new Date()) {
     return res
       .status(400)
-      .json(new ApiError(400, "Appointment time must be in future!"));
+      .json(new ApiError(400, "Appointment time must be in future"));
   }
+
   const end = new Date(start.getTime() + duration_minutes * 60000);
 
-  // Proper overlap check
   const conflict = await Appointment.findOne({
     counsellor_id,
     status: "scheduled",
@@ -91,31 +109,33 @@ export const createAppointment = asyncHandler(async (req, res) => {
   });
 
   if (conflict) {
-    return res
-      .status(409)
-      .json(
-        new ApiError(
-          409,
-          "counsellor is already booked with another session for given time"
-        )
-      );
+    return res.status(409).json(
+      new ApiError(
+        409,
+        "Counsellor already booked for this time"
+      )
+    );
   }
 
-  const appointment = await Appointment.create({
-    user_id,
-    counsellor_id,
-    scheduled_at: start,
-    counsellor_name: counsellor.fullname,
-    user_name: user.fullname,
-    duration_minutes,
-    session_type,
-    price,
-    notes,
-    reminderSent: false,
-  });
+const appointment = await Appointment.create({
+  user_id,
+  counsellor_id,
+  scheduled_at: start,
+  counsellor_name: counsellor.fullname,
+  user_name: user.fullname,
+  counsellorpic: counsellor.documents?.profile_picture,
+  userpic: user.profilePic || "",
+  duration_minutes,
+  session_type,
+  price,
+  notes,
+  reminderSent: false,
+});
+
 
   res.status(201).json(new ApiResponse(201, appointment));
 });
+
 
 export const getUserAppointments = asyncHandler(async (req, res) => {
   const {

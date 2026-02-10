@@ -15,16 +15,24 @@ const appointmentsSchema = new mongoose.Schema(
       index: true,
     },
 
-    counsellor_name : {
-      type : "String",
-      required : true
+    counsellor_name: {
+      type: "String",
+      required: true
     },
 
-    user_name : {
-      type : "String",
-      required : true
+    user_name: {
+      type: "String",
+      required: true
     },
 
+    counsellorpic: {
+      type: "String",
+      required: true
+    },
+    userpic: {
+      type: "String",
+      required: true
+    },
     counsellor_approved: {
       type: Boolean,
       default: false,
