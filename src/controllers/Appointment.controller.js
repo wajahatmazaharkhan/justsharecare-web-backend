@@ -9,6 +9,7 @@ import mongoose from "mongoose";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
 import timezone from "dayjs/plugin/timezone.js";
+import { createAndSendNotification } from "../services/Notification.service.js";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -114,8 +115,34 @@ export const createAppointment = asyncHandler(async (req, res) => {
     reminderSent: false,
   });
 
+  // Notification for counsellor
+  await createAndSendNotification({
+    userId: counsellor_id,
+    title: "New Appointment Booked",
+    body: `${user.fullname} booked a ${session_type} session`,
+    channel: "in-app",
+    type: "booking",
+    meta: {
+      appointmentId: appointment._id,
+    },
+  });
+
+  // Notification for user
+  await createAndSendNotification({
+    userId: user_id,
+    title: "Appointment Confirmed",
+    body: `Your ${session_type} session with ${counsellor.fullname} is scheduled`,
+    channel: "in-app",
+    type: "booking",
+    meta: {
+      appointmentId: appointment._id,
+    },
+  });
+
   res.status(201).json(new ApiResponse(201, appointment));
 });
+
+// ..........................................................
 
 export const getUserAppointments = asyncHandler(async (req, res) => {
   const {
@@ -128,7 +155,7 @@ export const getUserAppointments = asyncHandler(async (req, res) => {
     sort = "asc",
   } = req.query;
 
-  const userId =req.user.userId || req.user._id;
+  const userId = req.user.userId || req.user._id;
 
   const query = {
     user_id: userId,
@@ -192,9 +219,8 @@ export const getCounsellorAppointments = asyncHandler(async (req, res) => {
 
   // Find counsellor document using logged-in user
   const counsellor = await Counsellor.findOne({
-  user_id: req.user.userId || req.user.id,
-});
-
+    user_id: req.user.userId || req.user.id,
+  });
 
   if (!counsellor) {
     return res.status(404).json({ message: "Counsellor profile not found" });
@@ -314,9 +340,12 @@ export const approveAppointmentByCounsellor = asyncHandler(async (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(appointmentId)) {
     return res.status(400).json({ message: "Invalid appointment ID" });
   }
-
+  console.log(req.user);
+  const targetId = req.user.userId || req.user.user._id;
   // Step 1: Get counsellor profile from logged-in user
-  const counsellor = await Counsellor.findOne({ user_id: req.user._id });
+  const counsellor = await Counsellor.findOne({
+    user_id: targetId,
+  });
 
   if (!counsellor) {
     return res.status(403).json({ message: "Counsellor profile not found" });

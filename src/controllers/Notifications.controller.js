@@ -1,6 +1,8 @@
+import { Counsellor } from "../models/Counsellor.models.js";
 import { Notification } from "../models/Notifications.model.js";
 import { User } from "../models/User.models.js";
 import { sendRealtimeNotification } from "../realtime/sendRealtimeNotification.js";
+import { createAndSendNotification } from "../services/Notification.service.js";
 
 // ===============================================================
 // 📣 Create Notification
@@ -8,21 +10,12 @@ import { sendRealtimeNotification } from "../realtime/sendRealtimeNotification.j
 export const createNotification = async (req, res) => {
   try {
     const { title, body, channel, type, meta } = req.body;
-    console.log(req.user._id, req.user.userId);
 
-    const notification = await Notification.create({
+    const notification = await createAndSendNotification({
       userId: req.user.userId,
       title,
       body,
       channel,
-      type,
-      meta,
-    });
-
-    // Emit real-time notification
-    sendRealtimeNotification(req.user.userId, {
-      title,
-      body,
       type,
       meta,
     });
@@ -38,8 +31,19 @@ export const createNotification = async (req, res) => {
 // ===============================================================
 export const getNotifications = async (req, res) => {
   try {
-    const query = { userId: req.user.userId };
+    let targetId = req.user.userId;
 
+    // ⭐ If counsellor → get counsellorId
+    if (req.user.role === "counsellor") {
+      const counsellor = await Counsellor.findOne({
+        user_id: req.user.userId,
+      });
+
+      if (counsellor) {
+        targetId = counsellor._id;
+      }
+    }
+    const query = { userId: targetId };
     // Optional filtering
     if (req.query.type) {
       query.type = req.query.type;
@@ -48,7 +52,6 @@ export const getNotifications = async (req, res) => {
     const notifications = await Notification.find(query).sort({
       createdAt: -1,
     });
-
     res.json({ result: notifications.length, data: notifications });
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch notifications" });
