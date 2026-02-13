@@ -29,7 +29,6 @@ AppointmentRouter.get(
 
 AppointmentRouter.patch(
   "/:appointmentId/approve",
-  dynamicAuth,
   counsellorVerify,
   AppointmentController.approveAppointmentByCounsellor
 );
@@ -51,6 +50,13 @@ AppointmentRouter.delete(
   "/:id",
   dynamicAuth,
   AppointmentController.deleteAppointment
+);
+
+// reschedule appointment
+AppointmentRouter.patch(
+  "/reschedule/:id",
+  counsellorVerify,
+  AppointmentController.rescheduleAppointment
 );
 
 export { AppointmentRouter };
