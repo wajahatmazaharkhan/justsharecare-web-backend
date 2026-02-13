@@ -9,6 +9,7 @@ import mongoose from "mongoose";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
 import timezone from "dayjs/plugin/timezone.js";
+import { createAndSendNotification } from "../services/Notification.service.js";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -61,28 +62,25 @@ export const createAppointment = asyncHandler(async (req, res) => {
   }
 
   if (duration_minutes <= 0 || price <= 0) {
-    return res
-      .status(400)
-      .json(new ApiError(400, "Invalid duration or price"));
+    return res.status(400).json(new ApiError(400, "Invalid duration or price"));
   }
 
-  const counsellor = await Counsellor.findById(counsellor_id)
-    .select("fullname documents.profile_picture");
+  const counsellor = await Counsellor.findById(counsellor_id).select(
+    "fullname documents.profile_picture"
+  );
 
   if (!counsellor) {
     return res.status(404).json(new ApiError(404, "Counsellor not found"));
   }
 
-  const user = await User.findById(user_id)
-    .select("fullname profilePic");
+  const user = await User.findById(user_id).select("fullname profilePic");
 
   if (!user) {
     return res.status(404).json(new ApiError(404, "User not found"));
   }
 
   console.log("Counsellor Pic:", counsellor.documents?.profile_picture);
-console.log("User Pic:", user.profilePic);
-
+  console.log("User Pic:", user.profilePic);
 
   const start = dayjs.utc(scheduled_at).toDate();
 
@@ -109,33 +107,54 @@ console.log("User Pic:", user.profilePic);
   });
 
   if (conflict) {
-    return res.status(409).json(
-      new ApiError(
-        409,
-        "Counsellor already booked for this time"
-      )
-    );
+    return res
+      .status(409)
+      .json(new ApiError(409, "Counsellor already booked for this time"));
   }
 
-const appointment = await Appointment.create({
-  user_id,
-  counsellor_id,
-  scheduled_at: start,
-  counsellor_name: counsellor.fullname,
-  user_name: user.fullname,
-  counsellorpic: counsellor.documents?.profile_picture,
-  userpic: user.profilePic || "",
-  duration_minutes,
-  session_type,
-  price,
-  notes,
-  reminderSent: false,
-});
+  const appointment = await Appointment.create({
+    user_id,
+    counsellor_id,
+    scheduled_at: start,
+    counsellor_name: counsellor.fullname,
+    user_name: user.fullname,
+    counsellorpic: counsellor.documents?.profile_picture,
+    userpic: user.profilePic || "",
+    duration_minutes,
+    session_type,
+    price,
+    notes,
+    reminderSent: false,
+  });
 
+  // Notification for counsellor
+  await createAndSendNotification({
+    userId: counsellor_id,
+    title: "New Appointment Booked",
+    body: `${user.fullname} booked a ${session_type} session`,
+    channel: "in-app",
+    type: "booking",
+    meta: {
+      appointmentId: appointment._id,
+    },
+  });
+
+  // Notification for user
+  await createAndSendNotification({
+    userId: user_id,
+    title: "Appointment Confirmed",
+    body: `Your ${session_type} session with ${counsellor.fullname} is scheduled`,
+    channel: "in-app",
+    type: "booking",
+    meta: {
+      appointmentId: appointment._id,
+    },
+  });
 
   res.status(201).json(new ApiResponse(201, appointment));
 });
 
+// ..........................................................
 
 export const getUserAppointments = asyncHandler(async (req, res) => {
   const {
@@ -333,9 +352,12 @@ export const approveAppointmentByCounsellor = asyncHandler(async (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(appointmentId)) {
     return res.status(400).json({ message: "Invalid appointment ID" });
   }
-
+  console.log(req.user);
+  const targetId = req.user.userId || req.user.user._id;
   // Step 1: Get counsellor profile from logged-in user
-  const counsellor = await Counsellor.findOne({ user_id: req.user.userId });
+  const counsellor = await Counsellor.findOne({
+    user_id: targetId,
+  });
 
   if (!counsellor) {
     return res.status(403).json({ message: "Counsellor profile not found" });
