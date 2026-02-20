@@ -27,6 +27,10 @@ userRouter.post("/login", UserController.Login);
 
 userRouter.get(
   "/auth/google",
+  (req, res, next) => {
+    console.log("Using callback:", process.env.GOOGLE_CALLBACK_URL);
+    next();
+  },
   passport.authenticate("google", {
     scope: ["openid", "profile", "email"],
     // scope:

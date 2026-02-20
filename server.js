@@ -126,7 +126,6 @@ app.use(sessionConfig);
 app.use(cacheControl);
 app.use(passport.initialize());
 app.use(passport.session());
-
 // ===============================================================
 // 🏠 Default Route
 // ===============================================================
