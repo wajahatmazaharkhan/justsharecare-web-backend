@@ -79,6 +79,17 @@ export const Login = asyncHandler(async (req, res) => {
       .json(new ApiError(401, "Please login as counsellor"));
   }
 
+  if (!userExisted.Password) {
+    return res
+      .status(400)
+      .json(
+        new ApiError(
+          400,
+          "This account uses Google login. Please sign in with Google."
+        )
+      );
+  }
+
   const user = await userExisted.comparePassword(data.Password);
 
   await User.updateOne(
@@ -592,38 +603,41 @@ export const getAppointments = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, enrichedAppointments, "Appointments fetched"));
 });
 
+export const getCurrentuser = asyncHandler(async (req, res) => {
+  const userid = req.user.userId;
 
-export const getCurrentuser = asyncHandler(async(req, res) => {
-  const userid = req.user.userId; 
-  
   if (!userid) {
     throw new ApiError(404, "User ID not found");
   }
 
-  console.log('🔍 Looking for counsellor with user_id:', userid);
+  console.log("🔍 Looking for counsellor with user_id:", userid);
 
   // ✅ Use findOne to get a single counsellor document
-  const counsellor = await User.findOne({  userid });
+  const counsellor = await User.findOne({ userid });
 
   if (!counsellor) {
     throw new ApiError(404, "Counsellor not found");
   }
 
-  console.log('✅ Counsellor found:', {
+  console.log("✅ Counsellor found:", {
     _id: counsellor._id.toString(),
     user_id: counsellor.user_id.toString(),
     fullname: counsellor.fullname,
-    email: counsellor.email
+    email: counsellor.email,
   });
 
   // ✅ CRITICAL: Return in proper format
   return res.status(200).json(
-    new ApiResponse(200, {
-      _id: counsellor._id,
-      user_id: counsellor.user_id,
-      fullname: counsellor.fullname,
-      email: counsellor.email,
-      // ... other fields
-    }, "Counsellor found successfully")
+    new ApiResponse(
+      200,
+      {
+        _id: counsellor._id,
+        user_id: counsellor.user_id,
+        fullname: counsellor.fullname,
+        email: counsellor.email,
+        // ... other fields
+      },
+      "Counsellor found successfully"
+    )
   );
 });
