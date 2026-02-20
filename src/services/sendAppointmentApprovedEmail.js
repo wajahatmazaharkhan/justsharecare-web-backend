@@ -15,7 +15,7 @@ export const sendAppointmentApprovedEmail = async (
 
   await sendMail({
     to: userEmail,
-    subject: "Your Appointment is Confirmed!",
+    subject: "JustShare Care | Appointment Update",
     html: appointmentApprovedTemplate(
       userName,
       userEmail,
