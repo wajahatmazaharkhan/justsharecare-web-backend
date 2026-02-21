@@ -31,7 +31,7 @@ const appointmentsSchema = new mongoose.Schema(
     },
     userpic: {
       type: "String",
-      required: true
+      required: false
     },
     counsellor_approved: {
       type: Boolean,

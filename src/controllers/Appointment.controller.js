@@ -119,7 +119,7 @@ export const createAppointment = asyncHandler(async (req, res) => {
     counsellor_name: counsellor.fullname,
     user_name: user.fullname,
     counsellorpic: counsellor.documents?.profile_picture,
-    userpic: user.profilePic || "",
+    userpic: user.profilePic || "https://i.ibb.co/MkrV0pJn/image.png",
     duration_minutes,
     session_type,
     price,
