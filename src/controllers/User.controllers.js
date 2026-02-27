@@ -79,6 +79,12 @@ export const Login = asyncHandler(async (req, res) => {
       .json(new ApiError(401, "Please login as counsellor"));
   }
 
+  if (!userExisted.isVerified) {
+    return res
+      .status(400)
+      .json(new ApiError(400, "Please verify account before login!"));
+  }
+
   if (!userExisted.Password) {
     return res
       .status(400)
@@ -194,6 +200,14 @@ export const sendEmailOtp = asyncHandler(async (req, res) => {
   if (!userFound) {
     return res.status(404).json(new ApiError(404, "User not Found"));
   }
+
+  // isVerified Already
+  if (userFound.isVerified) {
+    return res
+      .status(409)
+      .json(new ApiResponse(409, null, "Already Verified!"));
+  }
+
 
   // ✅ Generate 4-digit OTP
   const otp = Math.floor(1000 + Math.random() * 9000).toString();

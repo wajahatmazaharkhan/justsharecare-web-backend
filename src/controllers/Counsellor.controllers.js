@@ -195,14 +195,14 @@ export const getallCounsellor = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, counsellor, "All counsellors fetched"));
 });
 
-export const getCurrentCounsellor = asyncHandler(async(req, res) => {
+export const getCurrentCounsellor = asyncHandler(async (req, res) => {
   const userid = req.user.userId; // This is the user_id from auth token
-  
+  console.log("req.user",req.user);
   if (!userid) {
     throw new ApiError(404, "User ID not found");
   }
 
-  console.log('🔍 Looking for counsellor with user_id:', userid);
+  console.log("🔍 Looking for counsellor with user_id:", userid);
 
   // ✅ Use findOne to get a single counsellor document
   const counsellor = await Counsellor.findOne({ user_id: userid });
@@ -211,28 +211,34 @@ export const getCurrentCounsellor = asyncHandler(async(req, res) => {
     throw new ApiError(404, "Counsellor not found");
   }
 
-  console.log('✅ Counsellor found:', {
+  console.log("✅ Counsellor found:", {
     _id: counsellor._id.toString(),
     user_id: counsellor.user_id.toString(),
     fullname: counsellor.fullname,
-    email: counsellor.email
+    email: counsellor.email,
   });
 
   // ✅ CRITICAL: Return in proper format
   return res.status(200).json(
-    new ApiResponse(200, {
-      _id: counsellor._id,
-      user_id: counsellor.user_id,
-      fullname: counsellor.fullname,
-      email: counsellor.email,
-      // ... other fields
-    }, "Counsellor found successfully")
+    new ApiResponse(
+      200,
+      {
+        _id: counsellor._id,
+        user_id: counsellor.user_id,
+        fullname: counsellor.fullname,
+        email: counsellor.email,
+        // ... other fields
+      },
+      "Counsellor found successfully"
+    )
   );
 });
 
-
 export const getRandomCounsellors = asyncHandler(async (req, res) => {
   const counsellors = await Counsellor.aggregate([
+    {
+      $match: { Admin_approved: true },
+    },
     {
       $sample: { size: 3 },
     },
@@ -250,7 +256,7 @@ export const getRandomCounsellors = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, counsellors, "Random counsellors fetched"));
+    .json(new ApiResponse(200, counsellors, "counsellors fetched"));
 });
 
 export const getCounsellorByEmail = asyncHandler(async (req, res) => {
