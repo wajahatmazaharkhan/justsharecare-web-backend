@@ -26,7 +26,7 @@ export const SignUp = asyncHandler(async (req, res) => {
 
   const oldUser = await User.findOne({ email: data.email });
   if (oldUser) {
-    return res.status(409).json(new ApiError(409, "User Already Exists"));
+    return res.status(409).json(new ApiError(409, "User with this email already exists!"));
   }
 
   const newUser = await User.create({
@@ -41,7 +41,7 @@ export const SignUp = asyncHandler(async (req, res) => {
   });
 
   if (!newUser) {
-    return res.status(400).json(new ApiError(400, "User not created"));
+    return res.status(400).json(new ApiError(400, "Server Error while creating account!"));
   }
   await sendWelcomeEmail(newUser.fullname, newUser.email);
   return res.status(201).json(
@@ -70,19 +70,19 @@ export const Login = asyncHandler(async (req, res) => {
   const userExisted = await User.findOne({ email: data.email });
 
   if (!userExisted) {
-    return res.status(404).json(new ApiError(404, "User Account not found"));
+    return res.status(404).json(new ApiError(404, "No Account was found with this email!"));
   }
 
   if (userExisted.role === "counsellor") {
     return res
       .status(401)
-      .json(new ApiError(401, "Please login as counsellor"));
+      .json(new ApiError(401, "Please login through counsellor portal"));
   }
 
   if (!userExisted.isVerified) {
     return res
       .status(400)
-      .json(new ApiError(400, "Please verify account before login!"));
+      .json(new ApiError(400, "Verify Account before Logging In!"));
   }
 
   if (!userExisted.Password) {
@@ -91,7 +91,7 @@ export const Login = asyncHandler(async (req, res) => {
       .json(
         new ApiError(
           400,
-          "This account uses Google login. Please sign in with Google."
+          "Account is associated with Google. Please sign in with Google."
         )
       );
   }
