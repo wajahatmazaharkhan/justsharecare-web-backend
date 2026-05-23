@@ -18,27 +18,9 @@
 
 import { Router } from "express";
 import { FormController } from "../controllers/index.js";
+import { StoreWaitingListUser } from "../controllers/Form.controllers.js";
 
 export const FormRouter = Router();
 
-// -------------------------
-// POST  /submit
-// Description: Submit new form
-// -------------------------
 FormRouter.route("/submit").post(FormController.FormController);
-//FormRouter.post("/submit",FormController);
-//--------------------------
-
-// ===============================================
-// EXAMPLES (Add when project grows)
-// ===============================================
-//
-// FormRouter.route("/all").get(GetAllFormsController);
-//
-// FormRouter.route("/:id").get(GetSingleFormController);
-//
-// FormRouter.route("/update/:id").put(UpdateFormController);
-//
-// FormRouter.route("/delete/:id").delete(DeleteFormController);
-//
-// ===============================================
+FormRouter.route("/waiting-list").post(StoreWaitingListUser)

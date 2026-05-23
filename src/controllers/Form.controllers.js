@@ -18,6 +18,7 @@
 // ===============================================
 
 import { Form } from "../models/Form.models.js";
+import { WaitingList } from "../models/WaitingList.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/async-handler.js";
@@ -39,4 +40,30 @@ export const FormController = asyncHandler(async (req, res) => {
 
   // 3. Success response
   res.status(201).json(new ApiResponse(201, { form: newform }, "ok"));
+});
+
+export const StoreWaitingListUser = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json(new ApiError(400, "Email is required."));
+  }
+
+  let emailExists = await WaitingList.findOne({ email });
+
+  if (emailExists) {
+    return res
+      .status(409)
+      .json(new ApiError(409, "Email already enrolled"));
+  }
+
+  const newEmail = await WaitingList.create({
+    email: email,
+  });
+
+  if (!newEmail) {
+    return res.status(500).json(new ApiError(500, "Internal Server Error"));
+  }
+
+  return res.status(201).json(new ApiResponse(201, email, "Ok"));
 });
