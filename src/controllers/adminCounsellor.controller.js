@@ -94,6 +94,9 @@ export const getCurrentMonthRevenue = asyncHandler(async (req, res) => {
       $gte: startDate,
       $lt: dateToday,
     },
+    status: {
+      $ne: "cancelled",
+    },
   }).lean();
   // map through approved appointments and collect & sum price
   const totalRevenueThisMonth = counsellorApprovedAppointments.reduce(
